@@ -39,12 +39,6 @@ public final class BoardView extends Canvas {
         return 820;
     }
 
-    @Override
-    public void resize(double width, double height) {
-        setWidth(width);
-        setHeight(height);
-    }
-
     private void draw() {
         double width = getWidth();
         double height = getHeight();
