@@ -12,7 +12,7 @@ public class Mf extends Application {
         BoardView boardView = new BoardView(19, 19);
         StackPane root = new StackPane(boardView);
         root.setPadding(new Insets(0, 0, 28, 0));
-        Scene scene = new Scene(root, 760, 820);
+        Scene scene = new Scene(root, 760, 800);
 
         boardView.widthProperty().bind(root.widthProperty().subtract(root.getPadding().getLeft() + root.getPadding().getRight()));
         boardView.heightProperty().bind(root.heightProperty().subtract(root.getPadding().getTop() + root.getPadding().getBottom()));
