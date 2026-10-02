@@ -1,12 +1,23 @@
 plugins {
     java
     eclipse
+    application
+    id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
     }
+}
+
+javafx {
+    version = "25"
+    modules("javafx.controls")
+}
+
+application {
+    mainClass.set("com.tayek.mf.Mf")
 }
 
 sourceSets {
