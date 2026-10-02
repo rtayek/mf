@@ -10,7 +10,7 @@ public class Mf extends Application {
     public void start(Stage stage) {
         BoardView boardView = new BoardView(19, 19);
         StackPane root = new StackPane(boardView);
-        Scene scene = new Scene(root, 760, 820);
+        Scene scene = new Scene(root, 760, 760);
 
         boardView.widthProperty().bind(root.widthProperty());
         boardView.heightProperty().bind(root.heightProperty());
