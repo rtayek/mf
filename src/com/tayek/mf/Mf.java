@@ -26,12 +26,10 @@ public class Mf extends Application {
         updateStatus.run();
 
         BorderPane root = new BorderPane();
+        root.setPadding(new Insets(0, 0, 8, 0));
         root.setCenter(boardView);
         root.setBottom(status);
         Scene scene = new Scene(root, 760, 800);
-
-        boardView.widthProperty().bind(root.widthProperty());
-        boardView.heightProperty().bind(root.heightProperty().subtract(34));
 
         scene.setOnKeyPressed(event -> {
             boolean changed = switch (event.getCode()) {
