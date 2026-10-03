@@ -13,9 +13,14 @@ public final class BoardView extends Canvas {
     private static final double verticalSpacingMm = 23.7;
     private static final double marginMm = 14.0;
     private static final double stoneDiameterMm = 23.0;
+    private static final double hoverRadius = 0.38;
 
     private final int columns;
     private final int rows;
+    private FlatBoardTransform transform;
+    private double scale;
+    private int hoverX = -1;
+    private int hoverY = -1;
 
     public BoardView(int columns, int rows) {
         if (columns < 2 || rows < 2) {
@@ -26,6 +31,15 @@ public final class BoardView extends Canvas {
 
         widthProperty().addListener((observable, oldValue, newValue) -> draw());
         heightProperty().addListener((observable, oldValue, newValue) -> draw());
+
+        setOnMouseMoved(event -> updateHover(event.getX(), event.getY()));
+        setOnMouseExited(event -> {
+            if (hoverX >= 0) {
+                hoverX = -1;
+                hoverY = -1;
+                draw();
+            }
+        });
     }
 
     @Override
@@ -43,6 +57,34 @@ public final class BoardView extends Canvas {
         return 820;
     }
 
+    private void updateHover(double screenX, double screenY) {
+        if (transform == null) {
+            return;
+        }
+
+        Point2D board = transform.screenToBoard(screenX, screenY);
+        int x = (int) Math.round(board.getX());
+        int y = (int) Math.round(board.getY());
+        int newX = -1;
+        int newY = -1;
+
+        if (x >= 0 && x < columns && y >= 0 && y < rows) {
+            double dx = board.getX() - x;
+            double dy = board.getY() - y;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= hoverRadius && !hasSampleStone(x, y)) {
+                newX = x;
+                newY = y;
+            }
+        }
+
+        if (newX != hoverX || newY != hoverY) {
+            hoverX = newX;
+            hoverY = newY;
+            draw();
+        }
+    }
+
     private void draw() {
         double width = getWidth();
         double height = getHeight();
@@ -52,7 +94,7 @@ public final class BoardView extends Canvas {
 
         double physicalWidth = 2 * marginMm + (columns - 1) * horizontalSpacingMm;
         double physicalHeight = 2 * marginMm + (rows - 1) * verticalSpacingMm;
-        double scale = Math.min(width / physicalWidth, height / physicalHeight);
+        scale = Math.min(width / physicalWidth, height / physicalHeight);
 
         double boardWidth = physicalWidth * scale;
         double boardHeight = physicalHeight * scale;
@@ -61,7 +103,7 @@ public final class BoardView extends Canvas {
         double originX = left + marginMm * scale;
         double originY = top + marginMm * scale;
 
-        FlatBoardTransform transform = new FlatBoardTransform(originX, originY, scale);
+        transform = new FlatBoardTransform(originX, originY, scale);
         GraphicsContext g = getGraphicsContext2D();
 
         g.clearRect(0, 0, width, height);
@@ -86,6 +128,10 @@ public final class BoardView extends Canvas {
             drawHoshi(g, transform, scale);
             drawSampleStones(g, transform, scale);
         }
+
+        if (hoverX >= 0) {
+            drawHoverStone(g, transform, scale, hoverX, hoverY);
+        }
     }
 
     private static void drawHoshi(GraphicsContext g, BoardTransform transform, double scale) {
@@ -107,6 +153,24 @@ public final class BoardView extends Canvas {
         drawStone(g, transform, scale, 9, 10, false);
         drawStone(g, transform, scale, 14, 15, true);
         drawStone(g, transform, scale, 15, 15, false);
+    }
+
+    private static boolean hasSampleStone(int x, int y) {
+        return (x == 3 && y == 3) || (x == 4 && y == 3)
+                || (x == 9 && y == 9) || (x == 9 && y == 10)
+                || (x == 14 && y == 15) || (x == 15 && y == 15);
+    }
+
+    private static void drawHoverStone(GraphicsContext g, BoardTransform transform, double scale,
+            int x, int y) {
+        Point2D p = transform.boardToScreen(x, y);
+        double diameter = stoneDiameterMm * scale;
+        double radius = diameter / 2;
+        g.setFill(Color.rgb(20, 20, 20, 0.48));
+        g.fillOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
+        g.setStroke(Color.rgb(0, 0, 0, 0.58));
+        g.setLineWidth(Math.max(0.7, 0.45 * scale));
+        g.strokeOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
     }
 
     private static void drawStone(GraphicsContext g, BoardTransform transform, double scale,
