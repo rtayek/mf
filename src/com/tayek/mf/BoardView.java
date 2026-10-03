@@ -7,6 +7,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.paint.CycleMethod;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
+import javafx.geometry.VPos;
 
 public final class BoardView extends Canvas {
     private static final double horizontalSpacingMm = 22.0;
@@ -124,6 +127,8 @@ public final class BoardView extends Canvas {
             g.strokeLine(a.getX(), a.getY(), b.getX(), b.getY());
         }
 
+        drawCoordinates(g, transform, scale);
+
         if (columns == 19 && rows == 19) {
             drawHoshi(g, transform, scale);
             drawSampleStones(g, transform, scale);
@@ -132,6 +137,41 @@ public final class BoardView extends Canvas {
         if (hoverX >= 0) {
             drawHoverStone(g, transform, scale, hoverX, hoverY);
         }
+    }
+
+    private void drawCoordinates(GraphicsContext g, BoardTransform transform, double scale) {
+        double fontSize = Math.max(10.0, 7.5 * scale);
+        g.setFont(Font.font("SansSerif", fontSize));
+        g.setFill(Color.rgb(45, 36, 22));
+        g.setTextAlign(TextAlignment.CENTER);
+        g.setTextBaseline(VPos.CENTER);
+
+        double xOffset = 9.0 * scale;
+        double yOffset = 9.0 * scale;
+
+        for (int x = 0; x < columns; x++) {
+            Point2D top = transform.boardToScreen(x, 0);
+            Point2D bottom = transform.boardToScreen(x, rows - 1);
+            String label = columnLabel(x);
+            g.fillText(label, top.getX(), top.getY() - yOffset);
+            g.fillText(label, bottom.getX(), bottom.getY() + yOffset);
+        }
+
+        for (int y = 0; y < rows; y++) {
+            Point2D left = transform.boardToScreen(0, y);
+            Point2D right = transform.boardToScreen(columns - 1, y);
+            String label = Integer.toString(rows - y);
+            g.fillText(label, left.getX() - xOffset, left.getY());
+            g.fillText(label, right.getX() + xOffset, right.getY());
+        }
+    }
+
+    private static String columnLabel(int x) {
+        int letter = 'A' + x;
+        if (letter >= 'I') {
+            letter++;
+        }
+        return Character.toString((char) letter);
     }
 
     private static void drawHoshi(GraphicsContext g, BoardTransform transform, double scale) {
@@ -166,9 +206,9 @@ public final class BoardView extends Canvas {
         Point2D p = transform.boardToScreen(x, y);
         double diameter = stoneDiameterMm * scale;
         double radius = diameter / 2;
-        g.setFill(Color.rgb(20, 20, 20, 0.48));
+        g.setFill(Color.rgb(10, 10, 10, 0.68));
         g.fillOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
-        g.setStroke(Color.rgb(0, 0, 0, 0.58));
+        g.setStroke(Color.rgb(0, 0, 0, 0.78));
         g.setLineWidth(Math.max(0.7, 0.45 * scale));
         g.strokeOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
     }
