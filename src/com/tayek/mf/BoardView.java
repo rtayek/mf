@@ -4,11 +4,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.paint.CycleMethod;
 
 public final class BoardView extends Canvas {
     private static final double horizontalSpacingMm = 22.0;
     private static final double verticalSpacingMm = 23.7;
     private static final double marginMm = 14.0;
+    private static final double stoneDiameterMm = 23.0;
 
     private final int columns;
     private final int rows;
@@ -80,6 +84,7 @@ public final class BoardView extends Canvas {
 
         if (columns == 19 && rows == 19) {
             drawHoshi(g, transform, scale);
+            drawSampleStones(g, transform, scale);
         }
     }
 
@@ -93,5 +98,50 @@ public final class BoardView extends Canvas {
                 g.fillOval(p.getX() - diameter / 2, p.getY() - diameter / 2, diameter, diameter);
             }
         }
+    }
+
+    private static void drawSampleStones(GraphicsContext g, BoardTransform transform, double scale) {
+        drawStone(g, transform, scale, 3, 3, true);
+        drawStone(g, transform, scale, 4, 3, false);
+        drawStone(g, transform, scale, 9, 9, true);
+        drawStone(g, transform, scale, 9, 10, false);
+        drawStone(g, transform, scale, 14, 15, true);
+        drawStone(g, transform, scale, 15, 15, false);
+    }
+
+    private static void drawStone(GraphicsContext g, BoardTransform transform, double scale,
+            int x, int y, boolean black) {
+        Point2D p = transform.boardToScreen(x, y);
+        double diameter = stoneDiameterMm * scale;
+        double radius = diameter / 2;
+
+        g.setFill(Color.rgb(0, 0, 0, 0.22));
+        double shadowOffset = 1.2 * scale;
+        g.fillOval(p.getX() - radius + shadowOffset, p.getY() - radius + shadowOffset,
+                diameter, diameter);
+
+        RadialGradient gradient;
+        if (black) {
+            gradient = new RadialGradient(0, 0,
+                    p.getX() - radius * 0.35, p.getY() - radius * 0.38,
+                    radius * 1.35, false, CycleMethod.NO_CYCLE,
+                    new Stop(0.0, Color.rgb(105, 105, 105)),
+                    new Stop(0.28, Color.rgb(45, 45, 45)),
+                    new Stop(1.0, Color.rgb(3, 3, 3)));
+        } else {
+            gradient = new RadialGradient(0, 0,
+                    p.getX() - radius * 0.35, p.getY() - radius * 0.38,
+                    radius * 1.35, false, CycleMethod.NO_CYCLE,
+                    new Stop(0.0, Color.WHITE),
+                    new Stop(0.62, Color.rgb(245, 245, 238)),
+                    new Stop(1.0, Color.rgb(178, 178, 170)));
+        }
+
+        g.setFill(gradient);
+        g.fillOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
+
+        g.setStroke(black ? Color.rgb(0, 0, 0, 0.85) : Color.rgb(95, 95, 90, 0.85));
+        g.setLineWidth(Math.max(0.7, 0.45 * scale));
+        g.strokeOval(p.getX() - radius, p.getY() - radius, diameter, diameter);
     }
 }
