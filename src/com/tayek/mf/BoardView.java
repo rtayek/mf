@@ -4,6 +4,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
@@ -19,6 +20,7 @@ public final class BoardView extends Canvas {
     private static final double hoverRadius = 0.38;
 
     private final BoardPosition position;
+    private final AudioClip stoneSound;
     private FlatBoardTransform transform;
     private double scale;
     private int hoverX = -1;
@@ -27,6 +29,8 @@ public final class BoardView extends Canvas {
 
     public BoardView(BoardPosition position) {
         this.position = position;
+        var soundUrl = BoardView.class.getResource("/audio/goclickb.wav");
+        stoneSound = soundUrl == null ? null : new AudioClip(soundUrl.toExternalForm());
         widthProperty().addListener((observable, oldValue, newValue) -> draw());
         heightProperty().addListener((observable, oldValue, newValue) -> draw());
         setOnMouseMoved(event -> updateHover(event.getX(), event.getY()));
@@ -63,6 +67,9 @@ public final class BoardView extends Canvas {
 
     private void playHover() {
         if (hoverX >= 0 && position.play(hoverX, hoverY)) {
+            if (stoneSound != null) {
+                stoneSound.play();
+            }
             hoverX = -1;
             hoverY = -1;
             draw();
