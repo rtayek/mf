@@ -5,7 +5,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -17,7 +16,7 @@ public class Mf extends Application {
         Label status = new Label();
         status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");
         BorderPane.setAlignment(status, Pos.CENTER);
-        BorderPane.setMargin(status, new Insets(4, 0, 6, 0));
+        BorderPane.setMargin(status, new Insets(4, 0, 12, 0));
 
         Runnable updateStatus = () -> {
             String side = position.sideToMove() == Stone.BLACK ? "Black" : "White";
@@ -32,7 +31,7 @@ public class Mf extends Application {
         Scene scene = new Scene(root, 760, 800);
 
         boardView.widthProperty().bind(root.widthProperty());
-        boardView.heightProperty().bind(root.heightProperty().subtract(28));
+        boardView.heightProperty().bind(root.heightProperty().subtract(34));
 
         scene.setOnKeyPressed(event -> {
             boolean changed = switch (event.getCode()) {
