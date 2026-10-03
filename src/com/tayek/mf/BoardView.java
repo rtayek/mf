@@ -50,8 +50,18 @@ public final class BoardView extends Canvas {
     }
 
     @Override public boolean isResizable() { return true; }
+    @Override public double minWidth(double height) { return 0; }
+    @Override public double minHeight(double width) { return 0; }
     @Override public double prefWidth(double height) { return 760; }
-    @Override public double prefHeight(double width) { return 820; }
+    @Override public double prefHeight(double width) { return 760; }
+    @Override public double maxWidth(double height) { return Double.MAX_VALUE; }
+    @Override public double maxHeight(double width) { return Double.MAX_VALUE; }
+
+    @Override
+    public void resize(double width, double height) {
+        setWidth(width);
+        setHeight(height);
+    }
 
     private void clearHover() {
         if (hoverX >= 0) {
