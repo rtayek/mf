@@ -26,7 +26,7 @@ public final class BoardView extends Canvas {
     public BoardView(BoardPosition position) {
         this.position = position;
         stoneSound = loadSound("/audio/goclickb.wav");
-        atariSound = loadSound("/audio/atari.wav");
+        atariSound = loadSound("/audio/goatari.wav");
         widthProperty().addListener((o, a, b) -> draw());
         heightProperty().addListener((o, a, b) -> draw());
         setOnMouseMoved(e -> updateHover(e.getX(), e.getY()));
