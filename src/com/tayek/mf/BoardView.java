@@ -141,7 +141,7 @@ public final class BoardView extends Canvas {
 
     private void drawCoordinates(GraphicsContext g, BoardTransform transform, double scale) {
         double fontSize = Math.max(10.0, 7.5 * scale);
-        g.setFont(Font.font("SansSerif", fontSize));
+        g.setFont(Font.font("Serif", fontSize));
         g.setFill(Color.rgb(45, 36, 22));
         g.setTextAlign(TextAlignment.CENTER);
         g.setTextBaseline(VPos.CENTER);
