@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -18,8 +19,10 @@ public class Mf extends Application {
         BorderPane.setAlignment(status, Pos.CENTER);
         BorderPane.setMargin(status, new Insets(4, 0, 6, 0));
 
-        Runnable updateStatus = () -> status.setText(
-                position.sideToMove() == Stone.BLACK ? "Black to move" : "White to move");
+        Runnable updateStatus = () -> {
+            String side = position.sideToMove() == Stone.BLACK ? "Black" : "White";
+            status.setText("Move " + position.moveNumber() + " / " + position.moveCount() + "    " + side + " to move");
+        };
         boardView.setOnPositionChanged(updateStatus);
         updateStatus.run();
 
@@ -30,6 +33,20 @@ public class Mf extends Application {
 
         boardView.widthProperty().bind(root.widthProperty());
         boardView.heightProperty().bind(root.heightProperty().subtract(28));
+
+        scene.setOnKeyPressed(event -> {
+            boolean changed = switch (event.getCode()) {
+                case LEFT -> position.previous();
+                case RIGHT -> position.next();
+                case HOME -> position.first();
+                case END -> position.last();
+                default -> false;
+            };
+            if (changed) {
+                boardView.refresh();
+                event.consume();
+            }
+        });
 
         stage.setTitle("mf - Go Viewer");
         stage.setScene(scene);
