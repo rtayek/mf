@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 public final class SgfCorpus {
     private SgfCorpus() { }
@@ -36,6 +38,7 @@ public final class SgfCorpus {
         int goGames = 0;
         int otherGames = 0;
         int gamesWithVariations = 0;
+        Map<Integer,Integer> gameTypes = new TreeMap<>();
         List<Failure> failures = new ArrayList<>();
 
         for (Path file : files) {
@@ -45,7 +48,9 @@ public final class SgfCorpus {
                 collections++;
                 games += collection.games().size();
                 for (Game game : collection.games()) {
-                    if (game.type() == GameType.GO) goGames++;
+                    int gm = game.type().sgfNumber();
+                    gameTypes.merge(gm, 1, Integer::sum);
+                    if (game.type().equals(GameType.GO)) goGames++;
                     else otherGames++;
                     if (hasVariation(game.tree().root())) gamesWithVariations++;
                 }
@@ -62,9 +67,11 @@ public final class SgfCorpus {
         System.out.printf("rejected:              %d%n", failures.size());
         System.out.printf("collections:           %d%n", collections);
         System.out.printf("games:                 %d%n", games);
-        System.out.printf("Go games:              %d%n", goGames);
-        System.out.printf("other/unknown games:   %d%n", otherGames);
+        System.out.printf("Go games (GM[1]):      %d%n", goGames);
+        System.out.printf("other game types:      %d%n", otherGames);
         System.out.printf("games with variations: %d%n", gamesWithVariations);
+        System.out.println("game types:");
+        gameTypes.forEach((gm,count) -> System.out.printf("  GM[%d]: %d%n", gm, count));
 
         if (!failures.isEmpty()) {
             System.out.println("\nREJECTED");
