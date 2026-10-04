@@ -45,3 +45,17 @@ dependencies {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("sgfCorpus") {
+    group = "verification"
+    description = "Parse an SGF directory and report accepted and rejected files"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("com.tayek.mf.SgfCorpus")
+    val sgfDir = providers.gradleProperty("sgfDir")
+    doFirst {
+        if (!sgfDir.isPresent) {
+            throw GradleException("usage: ./gradlew sgfCorpus -PsgfDir=../rtgo/data")
+        }
+        args(sgfDir.get())
+    }
+}
