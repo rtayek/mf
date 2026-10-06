@@ -48,10 +48,38 @@ interface GameRuntime {
 
         @Override public void showPath(List<GameNode> path) {
             BoardPosition loaded = new BoardPosition(size, size);
-            loaded.loadMoves(moves(path));
+            loaded.loadRecord(setup(path), moves(path), playerToMove(path));
             position = loaded;
             view.setPosition(loaded);
             view.setLabels(labels(path.isEmpty() ? null : path.get(path.size() - 1)));
+        }
+
+        private List<BoardPosition.SetupStone> setup(List<GameNode> path) {
+            ArrayList<BoardPosition.SetupStone> result = new ArrayList<>();
+            for (GameNode node : path) {
+                for (String value : node.property("AB")) addSetup(result, value, Stone.BLACK);
+                for (String value : node.property("AW")) addSetup(result, value, Stone.WHITE);
+                for (String value : node.property("AE")) addSetup(result, value, Stone.EMPTY);
+            }
+            return result;
+        }
+
+        private void addSetup(List<BoardPosition.SetupStone> result, String value, Stone stone) {
+            if (value.length() < 2) return;
+            int x = value.charAt(0) - 'a', y = value.charAt(1) - 'a';
+            if (x < 0 || x >= size || y < 0 || y >= size) return;
+            result.removeIf(s -> s.x() == x && s.y() == y);
+            result.add(new BoardPosition.SetupStone(x, y, stone));
+        }
+
+        private Stone playerToMove(List<GameNode> path) {
+            Stone result = null;
+            for (GameNode node : path)
+                for (String value : node.property("PL")) {
+                    if ("B".equalsIgnoreCase(value)) result = Stone.BLACK;
+                    else if ("W".equalsIgnoreCase(value)) result = Stone.WHITE;
+                }
+            return result;
         }
 
         private List<BoardLabel> labels(GameNode node) {
