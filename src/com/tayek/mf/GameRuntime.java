@@ -56,7 +56,7 @@ interface GameRuntime {
 
         private List<BoardLabel> labels(GameNode node) {
             if (node == null) return List.of();
-            ArrayList<BoardLabel> result = new ArrayList<>();
+            ArrayList<BoardLabel> authored = new ArrayList<>();
             for (String value : node.property("LB")) {
                 int colon = value.indexOf(':');
                 if (colon < 2) continue;
@@ -64,25 +64,34 @@ interface GameRuntime {
                 int y = value.charAt(1) - 'a';
                 String text = value.substring(colon + 1);
                 if (x >= 0 && x < position.width() && y >= 0 && y < position.height() && !text.isEmpty())
-                    result.add(new BoardLabel(x, y, text));
+                    authored.add(new BoardLabel(x, y, text));
             }
-            addVariationLabels(node, result);
-            return result;
-        }
 
-        private void addVariationLabels(GameNode node, List<BoardLabel> result) {
-            if (node == null || node.children().size() < 2) return;
+            // Variation controls are derived only from the current node. If the
+            // SGF already labels a child's move point, reuse that authored text
+            // as the control instead of drawing a second synthesized label.
+            ArrayList<BoardLabel> result = new ArrayList<>();
+            boolean[] used = new boolean[authored.size()];
             for (int childIndex = 0; childIndex < node.children().size(); childIndex++) {
-                GameNode child = node.children().get(childIndex);
-                Move move = child.move();
+                Move move = node.children().get(childIndex).move();
                 if (move == null || move.x() < 0 || move.y() < 0
                         || move.x() >= position.width() || move.y() >= position.height()) continue;
                 String text = variationLabel(childIndex);
-                boolean occupied = false;
-                for (BoardLabel label : result)
-                    if (label.x() == move.x() && label.y() == move.y()) { occupied = true; break; }
-                if (!occupied) result.add(BoardLabel.variation(move.x(), move.y(), text, childIndex));
+                for (int i = 0; i < authored.size(); i++) {
+                    BoardLabel label = authored.get(i);
+                    if (label.x() == move.x() && label.y() == move.y()) {
+                        text = label.text();
+                        used[i] = true;
+                        break;
+                    }
+                }
+                // A navigation label never belongs underneath an existing stone.
+                if (position.stoneAt(move.x(), move.y()) == Stone.EMPTY)
+                    result.add(BoardLabel.variation(move.x(), move.y(), text, childIndex));
             }
+            for (int i = 0; i < authored.size(); i++)
+                if (!used[i]) result.add(authored.get(i));
+            return result;
         }
 
         private static String variationLabel(int n) {
