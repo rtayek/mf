@@ -64,7 +64,32 @@ interface GameRuntime {
                 if (x >= 0 && x < position.width() && y >= 0 && y < position.height() && !text.isEmpty())
                     result.add(new BoardLabel(x, y, text));
             }
+            addVariationLabels(node, result);
             return result;
+        }
+
+        private void addVariationLabels(GameNode node, List<BoardLabel> result) {
+            if (node == null || node.children().size() < 2) return;
+            int variation = 0;
+            for (GameNode child : node.children()) {
+                Move move = child.move();
+                if (move == null || move.x() < 0 || move.y() < 0
+                        || move.x() >= position.width() || move.y() >= position.height()) continue;
+                String text = variationLabel(variation++);
+                boolean occupied = false;
+                for (BoardLabel label : result)
+                    if (label.x() == move.x() && label.y() == move.y()) { occupied = true; break; }
+                if (!occupied) result.add(new BoardLabel(move.x(), move.y(), text));
+            }
+        }
+
+        private static String variationLabel(int n) {
+            StringBuilder result = new StringBuilder();
+            do {
+                result.append((char) ('a' + n % 26));
+                n = n / 26 - 1;
+            } while (n >= 0);
+            return result.reverse().toString();
         }
 
         @Override public int moveNumber() { return position.moveNumber(); }
