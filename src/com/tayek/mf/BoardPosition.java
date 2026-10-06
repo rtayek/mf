@@ -11,6 +11,7 @@ public final class BoardPosition {
     private final Stone[][] stones;
     private final List<Move> moves = new ArrayList<>();
     private int moveNumber;
+    private Stone sideToMoveOverride;
     private boolean lastMoveCreatedAtari;
 
     public BoardPosition(int width, int height) {
@@ -24,13 +25,22 @@ public final class BoardPosition {
     public boolean lastMoveCreatedAtari(){return lastMoveCreatedAtari;}
     public Move lastMove(){return moveNumber==0?null:moves.get(moveNumber-1);}
     public Stone sideToMove(){
+        if (sideToMoveOverride != null) return sideToMoveOverride;
         Move last=lastMove();
         return last==null?Stone.BLACK:last.stone().opposite();
     }
 
     public void loadMoves(List<Move> loaded) {
-        moves.clear(); moves.addAll(loaded); moveNumber=moves.size(); rebuild();
+        loadRecord(List.of(), loaded, null);
     }
+
+    public void loadRecord(List<SetupStone> setup, List<Move> loaded, Stone playerToMove) {
+        moves.clear(); moves.addAll(loaded); moveNumber=moves.size();
+        sideToMoveOverride = playerToMove;
+        rebuild(setup);
+    }
+
+    public record SetupStone(int x, int y, Stone stone) { }
 
     public boolean play(int x,int y){return play(new Move(x,y,sideToMove()),true);}
 
@@ -57,7 +67,8 @@ public final class BoardPosition {
     public boolean first(){if(moveNumber==0)return false;moveNumber=0;rebuild();return true;}
     public boolean last(){if(moveNumber==moves.size())return false;moveNumber=moves.size();rebuild();return true;}
 
-    private void rebuild(){lastMoveCreatedAtari=false;clear(stones);for(int i=0;i<moveNumber;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(stones,m))throw new IllegalStateException("recorded move is illegal: "+m);}}
+    private void rebuild(){rebuild(List.of());}
+    private void rebuild(List<SetupStone> setup){lastMoveCreatedAtari=false;clear(stones);for(SetupStone s:setup)if(inside(s.x(),s.y()))stones[s.y()][s.x()]=s.stone();for(int i=0;i<moveNumber;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(stones,m))throw new IllegalStateException("recorded move is illegal: "+m);}}
     private Stone[][] positionAfter(int count){Stone[][] b=newBoard();for(int i=0;i<count;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(b,m))throw new IllegalStateException("recorded move is illegal: "+m);}return b;}
 
     private boolean applyMove(Stone[][] board,Move move){int x=move.x(),y=move.y();if(!inside(x,y)||board[y][x]!=Stone.EMPTY)return false;board[y][x]=move.stone();Stone opponent=move.stone().opposite();boolean[][] checked=new boolean[height][width];for(int[]d:directions){int nx=x+d[0],ny=y+d[1];if(!inside(nx,ny)||checked[ny][nx]||board[ny][nx]!=opponent)continue;Group group=groupAt(board,nx,ny);for(Point p:group.stones())checked[p.y()][p.x()]=true;if(group.liberties()==0)for(Point p:group.stones())board[p.y()][p.x()]=Stone.EMPTY;}if(groupAt(board,x,y).liberties()==0){board[y][x]=Stone.EMPTY;return false;}return true;}
