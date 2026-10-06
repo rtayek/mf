@@ -2,6 +2,7 @@ package com.tayek.mf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 import javafx.scene.Node;
 
@@ -16,8 +17,8 @@ interface GameRuntime {
     int moveNumber();
     Stone sideToMove();
 
-    static GameRuntime forGame(Game game, Runnable positionChanged) {
-        if (game.type().equals(GameType.GO)) return new GoRuntime(game, positionChanged);
+    static GameRuntime forGame(Game game, Runnable positionChanged, IntConsumer variationSelected) {
+        if (game.type().equals(GameType.GO)) return new GoRuntime(game, positionChanged, variationSelected);
         if (game.type().equals(GameType.GOMOKU)) return new GomokuRuntime(game);
         if (game.type().equals(GameType.LINES_OF_ACTION)) return new LoaRuntime();
         throw new IllegalArgumentException(
@@ -35,11 +36,12 @@ interface GameRuntime {
         private BoardPosition position;
         private final BoardView view;
 
-        GoRuntime(Game game, Runnable positionChanged) {
+        GoRuntime(Game game, Runnable positionChanged, IntConsumer variationSelected) {
             size = game.boardSize();
             position = new BoardPosition(size, size);
             view = new BoardView(position);
             view.setOnPositionChanged(positionChanged);
+            view.setOnVariationSelected(variationSelected);
         }
 
         @Override public Node view() { return view; }
@@ -75,11 +77,12 @@ interface GameRuntime {
                 Move move = child.move();
                 if (move == null || move.x() < 0 || move.y() < 0
                         || move.x() >= position.width() || move.y() >= position.height()) continue;
-                String text = variationLabel(variation++);
+                String text = variationLabel(variation);
                 boolean occupied = false;
                 for (BoardLabel label : result)
                     if (label.x() == move.x() && label.y() == move.y()) { occupied = true; break; }
-                if (!occupied) result.add(new BoardLabel(move.x(), move.y(), text));
+                if (!occupied) result.add(BoardLabel.variation(move.x(), move.y(), text, variation));
+                variation++;
             }
         }
 
