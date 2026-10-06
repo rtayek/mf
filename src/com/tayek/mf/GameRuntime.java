@@ -72,17 +72,16 @@ interface GameRuntime {
 
         private void addVariationLabels(GameNode node, List<BoardLabel> result) {
             if (node == null || node.children().size() < 2) return;
-            int variation = 0;
-            for (GameNode child : node.children()) {
+            for (int childIndex = 0; childIndex < node.children().size(); childIndex++) {
+                GameNode child = node.children().get(childIndex);
                 Move move = child.move();
                 if (move == null || move.x() < 0 || move.y() < 0
                         || move.x() >= position.width() || move.y() >= position.height()) continue;
-                String text = variationLabel(variation);
+                String text = variationLabel(childIndex);
                 boolean occupied = false;
                 for (BoardLabel label : result)
                     if (label.x() == move.x() && label.y() == move.y()) { occupied = true; break; }
-                if (!occupied) result.add(BoardLabel.variation(move.x(), move.y(), text, variation));
-                variation++;
+                if (!occupied) result.add(BoardLabel.variation(move.x(), move.y(), text, childIndex));
             }
         }
 
