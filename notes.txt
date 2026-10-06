@@ -1,0 +1,1 @@
+maybe add support for multiple games early and see if we can do a better job.
