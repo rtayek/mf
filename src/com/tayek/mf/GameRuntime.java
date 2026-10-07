@@ -51,7 +51,9 @@ interface GameRuntime {
             loaded.loadRecord(setup(path), moves(path), playerToMove(path));
             position = loaded;
             view.setPosition(loaded);
-            view.setLabels(labels(path.isEmpty() ? null : path.get(path.size() - 1)));
+            GameNode current = path.isEmpty() ? null : path.get(path.size() - 1);
+            view.setLabels(labels(current));
+            view.setMarks(marks(current));
         }
 
         private List<BoardPosition.SetupStone> setup(List<GameNode> path) {
@@ -79,6 +81,26 @@ interface GameRuntime {
                     if ("B".equalsIgnoreCase(value)) result = Stone.BLACK;
                     else if ("W".equalsIgnoreCase(value)) result = Stone.WHITE;
                 }
+            return result;
+        }
+
+        private List<BoardView.BoardMark> marks(GameNode node) {
+            if(node==null)return List.of();
+            ArrayList<BoardView.BoardMark> result=new ArrayList<>();
+            for(String id:List.of("TR","SQ","CR","MA")){
+                BoardView.BoardMark.Kind kind=switch(id){
+                    case "TR" -> BoardView.BoardMark.Kind.TRIANGLE;
+                    case "SQ" -> BoardView.BoardMark.Kind.SQUARE;
+                    case "CR" -> BoardView.BoardMark.Kind.CIRCLE;
+                    default -> BoardView.BoardMark.Kind.X;
+                };
+                for(String value:node.property(id)){
+                    if(value.length()!=2)continue;
+                    int x=value.charAt(0)-'a',y=value.charAt(1)-'a';
+                    if(x>=0&&y>=0&&x<size&&y<size)
+                        result.add(new BoardView.BoardMark(x,y,kind));
+                }
+            }
             return result;
         }
 
