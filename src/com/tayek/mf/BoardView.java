@@ -6,7 +6,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.media.AudioClip;
 import javafx.scene.paint.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -15,16 +14,15 @@ import javafx.scene.text.TextAlignment;
 public final class BoardView extends Canvas {
     private static final double horizontalSpacingMm=22.0,verticalSpacingMm=23.7,marginMm=14.0,stoneDiameterMm=23.0,hoverRadius=.38;
     private BoardPosition position; private List<BoardLabel> labels=List.of(); private List<BoardMark> marks=List.of();
-    private final AudioClip stoneSound,atariSound; private FlatBoardTransform transform; private double scale; private int hoverX=-1,hoverY=-1; private Runnable positionChanged=()->{}; private IntConsumer variationSelected=i->{};
-    public BoardView(BoardPosition position){this.position=position;stoneSound=loadSound("/audio/goclickb.wav");atariSound=loadSound("/audio/goatari.wav");widthProperty().addListener((o,a,b)->draw());heightProperty().addListener((o,a,b)->draw());setOnMouseMoved(e->updateHover(e.getX(),e.getY()));setOnMouseExited(e->clearHover());setOnMouseClicked(e->playHover());}
-    private static AudioClip loadSound(String r){var u=BoardView.class.getResource(r);return u==null?null:new AudioClip(u.toExternalForm());}
+    private final GameSounds sounds = new GameSounds(); private FlatBoardTransform transform; private double scale; private int hoverX=-1,hoverY=-1; private Runnable positionChanged=()->{}; private IntConsumer variationSelected=i->{};
+    public BoardView(BoardPosition position){this.position=position;widthProperty().addListener((o,a,b)->draw());heightProperty().addListener((o,a,b)->draw());setOnMouseMoved(e->updateHover(e.getX(),e.getY()));setOnMouseExited(e->clearHover());setOnMouseClicked(e->playHover());}
     public void setPosition(BoardPosition p){position=p;refresh();} public BoardPosition position(){return position;}
     public void setLabels(List<BoardLabel> value){labels=value==null?List.of():List.copyOf(value);draw();}
     public void setMarks(List<BoardMark> value){marks=value==null?List.of():List.copyOf(value);draw();}
     public void setOnPositionChanged(Runnable r){positionChanged=r==null?()->{}:r;} public void setOnVariationSelected(IntConsumer c){variationSelected=c==null?i->{}:c;} public void refresh(){hoverX=hoverY=-1;draw();positionChanged.run();}
     @Override public boolean isResizable(){return true;} @Override public double minWidth(double h){return 0;} @Override public double minHeight(double w){return 0;} @Override public double prefWidth(double h){return 760;} @Override public double prefHeight(double w){return 760;} @Override public double maxWidth(double h){return Double.MAX_VALUE;} @Override public double maxHeight(double w){return Double.MAX_VALUE;} @Override public void resize(double w,double h){setWidth(w);setHeight(h);}
     private void clearHover(){if(hoverX>=0){hoverX=hoverY=-1;draw();}}
-    private void playHover(){if(hasVariationChoices()){BoardLabel choice=variationAt(hoverX,hoverY);if(choice!=null){variationSelected.accept(choice.variationIndex());}else if(atariSound!=null)atariSound.play();return;}if(hoverX>=0&&position.play(hoverX,hoverY)){if(stoneSound!=null)stoneSound.play();if(position.lastMoveCreatedAtari()&&atariSound!=null)atariSound.play();hoverX=hoverY=-1;draw();positionChanged.run();}}
+    private void playHover(){if(hasVariationChoices()){BoardLabel choice=variationAt(hoverX,hoverY);if(choice!=null){variationSelected.accept(choice.variationIndex());}else sounds.playJosekiWarning();return;}if(hoverX>=0&&position.play(hoverX,hoverY)){sounds.play(GameSounds.Sound.stone);if(position.lastMoveCreatedAtari())sounds.play(GameSounds.Sound.atari);hoverX=hoverY=-1;draw();positionChanged.run();}}
     private boolean hasVariationChoices(){for(BoardLabel label:labels)if(label.isVariation())return true;return false;}
     private BoardLabel variationAt(int x,int y){for(BoardLabel label:labels)if(label.isVariation()&&label.x()==x&&label.y()==y)return label;return null;}
     private void updateHover(double sx,double sy){if(transform==null)return;Point2D b=transform.screenToBoard(sx,sy);int x=(int)Math.round(b.getX()),y=(int)Math.round(b.getY()),nx=-1,ny=-1;if(x>=0&&x<position.width()&&y>=0&&y<position.height()){double dx=b.getX()-x,dy=b.getY()-y;if(Math.sqrt(dx*dx+dy*dy)<=hoverRadius&&position.stoneAt(x,y)==Stone.EMPTY&&(!hasVariationChoices()||variationAt(x,y)!=null)){nx=x;ny=y;}}if(nx!=hoverX||ny!=hoverY){hoverX=nx;hoverY=ny;draw();}}
