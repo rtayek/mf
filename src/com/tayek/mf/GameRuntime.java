@@ -14,6 +14,7 @@ import javafx.scene.Node;
 interface GameRuntime {
     Node view();
     void showPath(List<GameNode> path);
+    default void setShowSingleContinuation(boolean show) { }
     int moveNumber();
     Stone sideToMove();
 
@@ -33,6 +34,7 @@ interface GameRuntime {
 
     final class GoRuntime implements GameRuntime {
         private final int size;
+        private boolean showSingleContinuation = true;
         private BoardPosition position;
         private final BoardView view;
 
@@ -45,6 +47,7 @@ interface GameRuntime {
         }
 
         @Override public Node view() { return view; }
+        @Override public void setShowSingleContinuation(boolean show) { showSingleContinuation = show; }
 
         @Override public void showPath(List<GameNode> path) {
             BoardPosition loaded = new BoardPosition(size, size);
@@ -127,6 +130,7 @@ interface GameRuntime {
                 if (move == null || move.x() < 0 || move.y() < 0
                         || move.x() >= position.width() || move.y() >= position.height()) continue;
                 String text = variationLabel(childIndex);
+                boolean hideSingle = !showSingleContinuation && node.children().size() == 1;
                 for (int i = 0; i < authored.size(); i++) {
                     BoardLabel label = authored.get(i);
                     if (label.x() == move.x() && label.y() == move.y()) {
@@ -137,7 +141,7 @@ interface GameRuntime {
                 }
                 // A navigation label never belongs underneath an existing stone.
                 if (position.stoneAt(move.x(), move.y()) == Stone.EMPTY)
-                    result.add(BoardLabel.variation(move.x(), move.y(), text, childIndex));
+                    result.add(BoardLabel.variation(move.x(), move.y(), hideSingle ? "" : text, childIndex));
             }
             for (int i = 0; i < authored.size(); i++)
                 if (!used[i]) result.add(authored.get(i));
