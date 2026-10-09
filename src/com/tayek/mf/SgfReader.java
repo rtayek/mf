@@ -14,7 +14,16 @@ public final class SgfReader {
     private SgfReader() { }
 
     public static GameCollection read(Path path) throws IOException {
-        Parser parser = new Parser(readText(path));
+        return read(readText(path), path.getFileName().toString());
+    }
+
+    /** Parse SGF directly from memory, without opening files. */
+    public static GameCollection read(String sgf) {
+        return read(sgf, "untitled.sgf");
+    }
+
+    private static GameCollection read(String sgf, String defaultName) {
+        Parser parser = new Parser(sgf);
         List<ParsedNode> roots = parser.parseCollection();
         List<Game> games = new ArrayList<>();
         for (ParsedNode root : roots) {
@@ -25,7 +34,7 @@ public final class SgfReader {
                     size,
                     stringProperty(root, "PB", "Black"),
                     stringProperty(root, "PW", "White"),
-                    stringProperty(root, "GN", path.getFileName().toString()),
+                    stringProperty(root, "GN", defaultName),
                     new GameTree(gameRoot)));
         }
         return new GameCollection(games);
