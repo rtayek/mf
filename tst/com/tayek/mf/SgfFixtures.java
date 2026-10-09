@@ -18,7 +18,7 @@ final class SgfFixtures {
         cases.put("variationOfAVariation", "(;FF[4]GM[1]SZ[19];B[aa];W[bb](;B[cc]N[Var A];W[dd];B[ad];W[bd])(;B[hh]N[Var B];W[hg])(;B[gg]N[Var C];W[gh];B[hh](;W[hg]N[Var A];B[kk])(;W[kl]N[Var B])))");
         cases.put("newvariationssmall", "(;GM[1]FF[4](;B[qd]BL[897]WL[900];W[oc]BL[897]WL[886];B[ld]BL[878]WL[886])(;B[pd]BL[897]WL[891]))");
         cases.put("smartgovariationsflat", "(;GM[1]FF[4]SZ[19](;B[qd](;W[oc];B[ld])(;W[od];B[oc]))(;B[pd]))");
-        cases.put("twoGamesInOneFileFromSmartGo", "(;GM[1]FF[4]SZ[19]AP[SmartGo:3.1.8]PW[ray]PB[SmartGo]DT[2022-01-07]KM[6.5]RU[Simple]TM[1800.0]OT[20 / 5]BL[1800.0]OM[20]OP[300.0];B[qd]V[0.0]BL[1799.6];W[oq];B[dd]V[0.0]BL[1799.5];W[oc];B[dp]V[0.0]BL[1799.4])(;GM[1]FF[4]SZ[19]AP[SmartGo:3.1.8]PW[raz]PB[SmartGo]DT[2022-01-07]KM[6.5]RU[Simple]TM[1800.0]OT[20 / 5]BL[1800.0]OM[20]OP[300.0];B[dq]V[0.0]BL[1799.6];W[oq];B[dd]V[0.0]BL[1799.5];W[oc];B[dp]V[0.0]BL[1799.4])");
+        cases.put("twoGamesInOneFileFromSmartGo", "(;GM[1]FF[4]SZ[19]AP[SmartGo:3.1.8]\nPW[ray]\nPB[SmartGo]\nDT[2022-01-07]\nKM[6.5]\nRU[Simple]\nTM[1800.0]OT[20 / 5]BL[1800.0]OM[20]OP[300.0];B[qd]V[0.0]BL[1799.6];W[oq]\n;B[dd]V[0.0]BL[1799.5];W[oc];B[dp]V[0.0]BL[1799.4])\n(;GM[1]FF[4]SZ[19]AP[SmartGo:3.1.8]\nPW[raz]\nPB[SmartGo]\nDT[2022-01-07]\nKM[6.5]\nRU[Simple]\nTM[1800.0]OT[20 / 5]BL[1800.0]OM[20]OP[300.0];B[dq]V[0.0]BL[1799.6];W[oq]\n;B[dd]V[0.0]BL[1799.5];W[oc];B[dp]V[0.0]BL[1799.4])\n");
         cases.put("smartgo4", "(;GM[1])\n(;GM[2])\n(;GM[3])\n(;GM[4])");
         cases.put("setupAndMarks", "(;GM[1]SZ[9]AB[aa][bb]AW[cc]PL[W]TR[dd][ee]LB[ff:A]C[setup])");
         cases.put("escapedComment", "(;GM[1]C[backslash \\\\ and bracket \\] and more]XX[a][b])");
@@ -37,6 +37,7 @@ final class SgfFixtures {
         cases.put("twosmallgamesflat", "(;FF[4];B[as])\n(;FF[4];B[at])");
         cases.put("smartgo42", "(;GM[1];B[as])\n(;GM[2];B[as])\n(;GM[3];B[as])\n(;GM[4];B[as])");
         cases.put("smartgo43", "(;GM[1];B[as];B[at])\n(;GM[2];B[as];B[at])\n(;GM[3];B[as];B[at])\n(;GM[4];B[as];B[at])");
+        cases.put("newvariationsmf", "(;\nGM[1]FF[4]VW[]CA[UTF-8]AP[Many Faces of Go:12.024]\nSZ[19]\nHA[0]\nST[0]\nPB[Opponent]\nPW[Opponent]\nDT[2022-03-28]\nKM[6.5]\nRU[Japanese]\nBR[30 Kyu]\nWR[30 Kyu]\n;B[qd]BL[895]WL[900]\n(;W[od]BL[895]WL[897];B[oc]BL[891]WL[897];W[nc]BL[891]WL[896];B[pc]BL[890]WL[896]\n(;W[nd]BL[890]WL[893];B[qf]BL[889]WL[893];W[jc]BL[889]WL[891])\n(;W[md]BL[889]WL[891];B[pe]BL[886]WL[891];W[ic]BL[886]WL[888]))\n(;W[oc]BL[880]WL[888];B[ld]BL[875]WL[888];W[of]BL[875]WL[886]\n(;B[qg]BL[873]WL[886])\n(;B[oe]BL[873]WL[883];W[ne]BL[873]WL[883];B[pe]BL[872]WL[883];W[nd]BL[872]WL[881]\n;B[nf]BL[870]WL[881];W[mf]BL[870]WL[880];B[ng]BL[869]WL[880];W[le]BL[869]WL[879];B[og]BL[867]WL[879]\n;W[kd]BL[867]WL[878])))\n");
         return java.util.Collections.unmodifiableMap(cases);
     }
 }
