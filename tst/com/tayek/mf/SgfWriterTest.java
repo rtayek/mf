@@ -66,7 +66,7 @@ final class SgfWriterTest {
             if (insideValue) {
                 normalized.append(c);
                 if (escaped) escaped = false;
-                else if (c == '\\\\') escaped = true;
+                else if (c == '\\') escaped = true;
                 else if (c == ']') insideValue = false;
             } else if (c == '[') {
                 insideValue = true;
