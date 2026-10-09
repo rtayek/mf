@@ -32,6 +32,52 @@ final class SgfWriterTest {
         assertEquals(first, second);
     }
 
+    /**
+     * Diagnostic only: compare original text with the serialized text.
+     * Ignore whitespace only outside property values. Do not fail the build.
+     * View output with: ./gradlew test --info
+     */
+    @Test void reportTextualRoundTrips() throws Exception {
+        int exact = 0, whitespaceOnly = 0, different = 0;
+        for (var entry : SgfFixtures.valid().entrySet()) {
+            Path input = directory.resolve("diagnostic.sgf");
+            String source = entry.getValue();
+            Files.writeString(input, source);
+            String written = SgfWriter.write(SgfReader.read(input));
+            if (source.equals(written)) {
+                exact++;
+            } else if (outsideWhitespaceRemoved(source).equals(outsideWhitespaceRemoved(written))) {
+                whitespaceOnly++;
+            } else {
+                different++;
+                System.out.println("TEXT DIFFERENCE: " + entry.getKey());
+            }
+        }
+        System.out.printf("SGF text round-trip: %d fixtures, %d exact, %d whitespace-only, %d different%n",
+                exact + whitespaceOnly + different, exact, whitespaceOnly, different);
+    }
+
+    /** Removes whitespace between SGF tokens, preserving property value contents and escapes. */
+    private static String outsideWhitespaceRemoved(String source) {
+        StringBuilder normalized = new StringBuilder();
+        boolean insideValue = false, escaped = false;
+        for (int i = 0; i < source.length(); i++) {
+            char c = source.charAt(i);
+            if (insideValue) {
+                normalized.append(c);
+                if (escaped) escaped = false;
+                else if (c == '\\\\') escaped = true;
+                else if (c == ']') insideValue = false;
+            } else if (c == '[') {
+                insideValue = true;
+                normalized.append(c);
+            } else if (!Character.isWhitespace(c)) {
+                normalized.append(c);
+            }
+        }
+        return normalized.toString();
+    }
+
     private static void assertCollectionsEqual(GameCollection expected, GameCollection actual, String name) {
         assertEquals(expected.games().size(), actual.games().size(), name + " game count");
         for (int i = 0; i < expected.games().size(); i++) {
