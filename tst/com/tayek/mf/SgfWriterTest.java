@@ -2,48 +2,35 @@ package com.tayek.mf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 final class SgfWriterTest {
-    @TempDir Path directory;
-
     @Test void roundTripRtgoFixtures() throws Exception {
         for (var entry : SgfFixtures.valid().entrySet()) {
-            Path input = directory.resolve("input.sgf");
-            Path output = directory.resolve("output.sgf");
-            Files.writeString(input, entry.getValue());
-            GameCollection original = SgfReader.read(input);
-            SgfWriter.write(original, output);
-            GameCollection restored = SgfReader.read(output);
+            GameCollection original = SgfReader.read(entry.getValue());
+            String serialized = SgfWriter.write(original);
+            GameCollection restored = SgfReader.read(serialized);
             assertCollectionsEqual(original, restored, entry.getKey());
         }
     }
 
     @Test void writerDoesNotChangeTreeOnRepeatedRoundTrip() throws Exception {
-        Path file = directory.resolve("test.sgf");
-        Files.writeString(file, SgfFixtures.valid().get("variationOfAVariation"));
-        GameCollection original = SgfReader.read(file);
+        GameCollection original = SgfReader.read(SgfFixtures.valid().get("variationOfAVariation"));
         String first = SgfWriter.write(original);
-        Files.writeString(file, first);
-        String second = SgfWriter.write(SgfReader.read(file));
+        String second = SgfWriter.write(SgfReader.read(first));
         assertEquals(first, second);
     }
 
     /**
      * Diagnostic only: compare original text with the serialized text.
      * Ignore whitespace only outside property values. Do not fail the build.
-     * View output with: ./gradlew test --info
+     * View output with: ./gradlew clean test --info
      */
     @Test void reportTextualRoundTrips() throws Exception {
         int exact = 0, whitespaceOnly = 0, different = 0;
         for (var entry : SgfFixtures.valid().entrySet()) {
-            Path input = directory.resolve("diagnostic.sgf");
             String source = entry.getValue();
-            Files.writeString(input, source);
-            String written = SgfWriter.write(SgfReader.read(input));
+            String written = SgfWriter.write(SgfReader.read(source));
             if (source.equals(written)) {
                 exact++;
             } else if (outsideWhitespaceRemoved(source).equals(outsideWhitespaceRemoved(written))) {
