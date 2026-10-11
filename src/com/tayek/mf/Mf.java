@@ -18,11 +18,45 @@ import javafx.stage.Stage;
 public class Mf extends Application {
     private static final String LAST_SGF_DIRECTORY = "lastSgfDirectory";
     private final Preferences preferences = Preferences.userNodeForPackage(Mf.class);
-    private Label status; private Label welcome; private BorderPane content; private VBox documentPane; private Label nodeName; private TextArea comment; private String gameLabel=""; private Game activeGame;
+    private Label status; private Label welcome; private BorderPane content; private VBox documentPane; private Label nodeName; private TextArea comment; private String gameLabel=""; private Game activeGame; private GameCollection activeCollection; private File sourceFile; private MenuItem saveAs;
     private GameRuntime runtime; private CheckMenuItem showSingleContinuation;
     private GameNode currentNode; private GameNode rootNode;
-    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");file.getItems().add(open);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);MenuBar menuBar=new MenuBar(file,viewMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{if(rootNode==null)return;boolean changed=false;switch(e.getCode()){case LEFT->changed=treeBack();case RIGHT->changed=treeForward(0);case UP->changed=chooseSibling(-1);case DOWN->changed=chooseSibling(1);case HOME->changed=treeHome();case END->changed=treeEnd();default->{}}if(changed)e.consume();});stage.setTitle("mf - SGF Viewer");stage.setScene(scene);stage.show();}
-    private void openSgf(Stage stage){FileChooser chooser=new FileChooser();chooser.setTitle("Open SGF Game");chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SGF files","*.sgf"));String savedDirectory=preferences.get(LAST_SGF_DIRECTORY,"");if(!savedDirectory.isBlank()){File directory=new File(savedDirectory);if(directory.isDirectory())chooser.setInitialDirectory(directory);}File file=chooser.showOpenDialog(stage);if(file==null)return;File parent=file.getParentFile();if(parent!=null&&parent.isDirectory())preferences.put(LAST_SGF_DIRECTORY,parent.getAbsolutePath());try{GameCollection collection=SgfReader.read(file.toPath());Game game=collection.games().stream().findFirst().orElseThrow(()->new IllegalArgumentException("SGF collection contains no games"));showGame(game);stage.setTitle("mf - "+game.name());}catch(Exception ex){new Alert(Alert.AlertType.ERROR,"Could not load SGF:\n"+ex.getMessage(),ButtonType.OK).showAndWait();}}
+    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));file.getItems().addAll(open,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);MenuBar menuBar=new MenuBar(file,viewMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{if(rootNode==null)return;boolean changed=false;switch(e.getCode()){case LEFT->changed=treeBack();case RIGHT->changed=treeForward(0);case UP->changed=chooseSibling(-1);case DOWN->changed=chooseSibling(1);case HOME->changed=treeHome();case END->changed=treeEnd();default->{}}if(changed)e.consume();});stage.setTitle("mf - SGF Viewer");stage.setScene(scene);stage.show();}
+    private void openSgf(Stage stage){FileChooser chooser=new FileChooser();chooser.setTitle("Open SGF Game");chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SGF files","*.sgf"));String savedDirectory=preferences.get(LAST_SGF_DIRECTORY,"");if(!savedDirectory.isBlank()){File directory=new File(savedDirectory);if(directory.isDirectory())chooser.setInitialDirectory(directory);}File file=chooser.showOpenDialog(stage);if(file==null)return;File parent=file.getParentFile();if(parent!=null&&parent.isDirectory())preferences.put(LAST_SGF_DIRECTORY,parent.getAbsolutePath());try{GameCollection collection=SgfReader.read(file.toPath());Game game=collection.games().stream().findFirst().orElseThrow(()->new IllegalArgumentException("SGF collection contains no games"));showGame(game);activeCollection=collection;sourceFile=file;saveAs.setDisable(false);stage.setTitle("mf - "+game.name());}catch(Exception ex){new Alert(Alert.AlertType.ERROR,"Could not load SGF:\n"+ex.getMessage(),ButtonType.OK).showAndWait();}}
+    private void saveAs(Stage stage){
+        if(activeCollection==null)return;
+        FileChooser chooser=new FileChooser();
+        chooser.setTitle("Save SGF Collection As");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SGF files","*.sgf"));
+        chooser.setSelectedExtensionFilter(chooser.getExtensionFilters().get(0));
+        String savedDirectory=preferences.get(LAST_SGF_DIRECTORY,"");
+        File directory=sourceFile!=null?sourceFile.getParentFile():null;
+        if(directory==null||!directory.isDirectory())directory=new File(savedDirectory);
+        if(directory.isDirectory())chooser.setInitialDirectory(directory);
+        if(sourceFile!=null)chooser.setInitialFileName(sourceFile.getName());
+        File selected=chooser.showSaveDialog(stage);
+        if(selected==null)return;
+        File target=selected;
+        if(!target.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".sgf"))
+            target=new File(target.getParentFile(),target.getName()+".sgf");
+        if(target.exists()){
+            Alert confirm=new Alert(Alert.AlertType.CONFIRMATION,
+                    "Overwrite existing file?\n"+target.getAbsolutePath(),
+                    ButtonType.YES,ButtonType.NO);
+            confirm.initOwner(stage);
+            if(confirm.showAndWait().orElse(ButtonType.NO)!=ButtonType.YES)return;
+        }
+        try{
+            SgfSave.saveAs(activeCollection,target.toPath());
+            File parent=target.getParentFile();
+            if(parent!=null&&parent.isDirectory())preferences.put(LAST_SGF_DIRECTORY,parent.getAbsolutePath());
+            stage.setTitle("mf - "+target.getName());
+        }catch(Exception ex){
+            Alert error=new Alert(Alert.AlertType.ERROR,"Could not save SGF:\n"+ex.getMessage(),ButtonType.OK);
+            error.initOwner(stage);
+            error.showAndWait();
+        }
+    }
     private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=rootNode;String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);reloadPath();}
     private List<GameNode> pathNodes(){ArrayList<GameNode> reversed=new ArrayList<>();for(GameNode n=currentNode;n!=null;n=n.parent())reversed.add(n);ArrayList<GameNode> result=new ArrayList<>();for(int i=reversed.size()-1;i>=0;i--)result.add(reversed.get(i));return result;}
     private void reloadPath(){if(runtime==null)return;runtime.showPath(pathNodes());updateDocumentPane();updateStatus();}
