@@ -1,0 +1,83 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+
+> Task :sgfCorpus
+SGF corpus: C:\Users\ray\eclipse-workspace\rtgo
+files:                 828
+parsed:                771
+rejected:              57
+collections:           771
+games:                 783
+Go games (GM[1]):      779
+other game types:      4
+games with variations: 165
+game types:
+  GM[1]: 779
+  GM[2]: 2
+  GM[3]: 1
+  GM[4]: 1
+
+REJECTED
+data\excludedsgf\test1.sgf	game tree contains no nodes at character 325
+data\sgf\nosize\smartgo43.sgf	expected '(' at character 20
+data\strangesgf\() not same count\( missing at beginning.sgf	expected '(' at character 0
+data\strangesgf\() not same count\1699 one closing ) too much.sgf	expected '(' at character 743
+data\strangesgf\() not same count\1954  one closing ) too much.sgf	expected '(' at character 1173
+data\strangesgf\() not same count\2053 one closing ) missing.sgf	expected ')' at character 686
+data\strangesgf\() not same count\mail header, missing ) at end.sgf	expected '(' at character 0
+data\strangesgf\() not same count\many ) missing.sgf	expected '(' at character 117
+data\strangesgf\() not same count\missing ) at end.sgf	expected ')' at character 59
+data\strangesgf\);\); - not legal.sgf	expected ')' at character 21
+data\strangesgf\; missing\5er, some var., ';' after '(' missing.sgf	game tree contains no nodes at character 52
+data\strangesgf\; missing\; missing.sgf	game tree contains no nodes at character 1
+data\strangesgf\; missing\missing 1st '';''.sgf	game tree contains no nodes at character 1
+data\strangesgf\; missing\tabs, empty branch without ; .sgf	game tree contains no nodes at character 216
+data\strangesgf\Comments\], [ in C\9147 ] in comm.sgf	expected ')' at character 643
+data\strangesgf\Comments\], [ in C\Comment[...] with ireg [ + ] .sgf	expected ')' at character 40
+data\strangesgf\Comments\], [ in C\] inComment.sgf	expected ')' at character 25
+data\strangesgf\Comments\], [ in C\]+!+& inComment.sgf	expected ')' at character 26
+data\strangesgf\Comments\], [ in C\test.sgf	expected ')' at character 73
+data\strangesgf\Comments\escaped and not escaped\10744 esc.Zeichen nicht esc - gefangen.sgf	unterminated property value at character 1261
+data\strangesgf\Comments\escaped and not escaped\last ] escaped.sgf	unterminated property value at character 62
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\FF3 JIANG1.sgf	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\FF3 MSTROFGO.sgf	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\FF3 TOUR-1.sgf	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\FF[3] XXQJ1.SGF	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\MyGoTutor MGT FF[3] HAM_01.sgf	property G has no value at character 6
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\MyGoTutor MGT FF[3] POS_10.sgf	property G has no value at character 6
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\MyGoTutor MGT FF[3] PROB_01.sgf	property G has no value at character 5
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\TEST FF[1+3] + WS XXQJ1.SGF	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\TEST2 FF[3] XXQJ1.SGF	property G has no value at character 4
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\TEST3 FF[1+3] XXQJ1.SGF	property A has no value at character 10
+data\strangesgf\FF[3] (SiZe, AddBlack,...)\ff3 xx.sgf	property A has no value at character 5
+data\strangesgf\FileSize, too long Strings\11478 Code chopped apart - missing ]))), many b-slashes in unfinished C.sgf	unterminated property value at character 65585
+data\strangesgf\GM, FF\Test GM[0].sgf	SGF game number must be positive
+data\strangesgf\Labels\Labels without colon, without char DEFECT (]).sgf	expected ')' at character 38
+data\strangesgf\Leading + trailing char\valid + email header.sgf	expected '(' at character 0
+data\strangesgf\Leading + trailing char\with mail header + some NewLine + words at end.sgf	expected '(' at character 0
+data\strangesgf\Leading + trailing char\with mail header + some words at end.sgf	expected '(' at character 0
+data\strangesgf\Leading + trailing char\with mail header.sgf	expected '(' at character 0
+data\strangesgf\Leading + trailing char\xyz(;..)xyz.sgf	expected '(' at character 0
+data\strangesgf\[]() colons\MyGoTutor MGT FF[3] HAM_01.sgf	property G has no value at character 6
+data\strangesgf\exception (too many chars in comment and other IDs)\damaged file, (too much example code), missing ]))).sgf	unterminated property value at character 65585
+data\strangesgf\exception (too many chars in comment and other IDs)\repaired damaged file 1,  comment = 63193 x b-slash (too much example code).sgf	unterminated property value at character 65589
+data\strangesgf\exception (too many chars in comment and other IDs)\repaired damaged file 2, comment = 63193 x b-slash (too much example code).sgf	expected ')' at character 65590
+data\strangesgf\file small + too small\0 Bytes.sgf	SGF collection contains no games at character 0
+data\strangesgf\file small + too small\Too small and invalid - just ().sgf	game tree contains no nodes at character 1
+data\strangesgf\hand work errors\2701 (;[yy;0].sgf	expected ')' at character 2
+data\strangesgf\hand work errors\Labels ohne dppp u. char, 1] zu viel.sgf	expected ')' at character 38
+data\strangesgf\instant Ko take back\Ko direct recapture.sgf	unterminated property value at character 159
+data\strangesgf\legal\035 tabs instead of spaces.sgf	game tree contains no nodes at character 216
+data\strangesgf\multi (collection files)\defect easy(SPLIT) cutTo4Problems.sgf	expected '(' at character 0
+data\strangesgf\multi (collection files)\easy(SPLIT) cutTo4Problems.sgf	expected '(' at character 0
+data\strangesgf\multi (collection files)\multiEasy.sgf	expected '(' at character 0
+data\strangesgf\variations\5er, some vars, defect 1.sgf	game tree contains no nodes at character 32
+data\strangesgf\variations\5er, some vars, defect 2.sgf	expected ')' at character 100
+data\strangesgf\variations\5er, some vars, defect.sgf	expected '(' at character 0
+data\wasinroot\a1a2.sgf	expected '(' at character 0
+
+BUILD SUCCESSFUL in 4s
+3 actionable tasks: 1 executed, 2 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.0/userguide/configuration_cache_enabling.html
