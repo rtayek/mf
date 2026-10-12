@@ -59,5 +59,13 @@ public final class GameNode {
     }
 
     public List<GameNode> children() { return Collections.unmodifiableList(children); }
-    public void addChild(GameNode child) { children.add(child); }
+    public void addChild(GameNode child) { insertChild(children.size(), child); }
+    void insertChild(int index, GameNode child) {
+        if (child == null || child.parent() != this || children.contains(child))
+            throw new IllegalArgumentException("child must be new and have this parent");
+        children.add(index, child);
+    }
+    void removeChild(GameNode child) {
+        if (!children.remove(child)) throw new IllegalArgumentException("child is not attached");
+    }
 }
