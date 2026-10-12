@@ -98,7 +98,11 @@ public class Mf extends Application {
         updateEditMenu();
     }
     private void redoEdit() {
-        if (editHistory.redo()) reloadPath();
+        Command pending = editHistory.nextRedo();
+        if (editHistory.redo()) {
+            if (pending instanceof AddNodeCommand add) currentNode = add.child();
+            reloadPath();
+        }
         updateEditMenu();
     }
     private boolean isAttachedToRoot(GameNode node) {
