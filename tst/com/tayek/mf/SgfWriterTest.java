@@ -86,6 +86,24 @@ final class SgfWriterTest {
                 SgfWriter.write(SgfReader.read("(;GM[1])(;GM[4])")));
     }
 
+    @Test void realWorldSgfFilesRoundTripAndStabilize() throws Exception {
+        for (String name : java.util.List.of(
+                "39016682-086-DonJuan-rtayek.sgf",
+                "smart-go-1.sgf")) {
+            java.nio.file.Path source = java.nio.file.Path.of("tmp", name);
+            GameCollection original = SgfReader.read(source);
+            String first = SgfWriter.write(original);
+            GameCollection restored = SgfReader.read(first);
+            assertCollectionsEqual(original, restored, name);
+            String second = SgfWriter.write(restored);
+            assertEquals(first, second, name + " second serialization");
+            assertTrue(java.util.Arrays.equals(
+                    first.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    second.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    name + " UTF-8 bytes");
+        }
+    }
+
     private static void assertCollectionsEqual(GameCollection expected, GameCollection actual, String name) {
         assertEquals(expected.games().size(), actual.games().size(), name + " game count");
         for (int i = 0; i < expected.games().size(); i++) {
