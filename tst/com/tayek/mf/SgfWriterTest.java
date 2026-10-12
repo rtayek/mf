@@ -1,6 +1,7 @@
 package com.tayek.mf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +64,21 @@ final class SgfWriterTest {
             }
         }
         return normalized.toString();
+    }
+
+    @Test void longGameIsWrappedAndStable() {
+        StringBuilder input = new StringBuilder("(;GM[1]");
+        for (int i = 0; i < 30; i++) input.append(";B[aa]");
+        input.append(')');
+        String formatted = SgfWriter.write(SgfReader.read(input.toString()));
+        assertTrue(formatted.contains("\n"));
+        assertEquals(outsideWhitespaceRemoved(input.toString()), outsideWhitespaceRemoved(formatted));
+        assertEquals(formatted, SgfWriter.write(SgfReader.read(formatted)));
+    }
+
+    @Test void collectionGamesAreSeparated() {
+        assertEquals("(;GM[1])\n(;GM[4])",
+                SgfWriter.write(SgfReader.read("(;GM[1])(;GM[4])")));
     }
 
     private static void assertCollectionsEqual(GameCollection expected, GameCollection actual, String name) {
