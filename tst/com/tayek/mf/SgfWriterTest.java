@@ -15,11 +15,16 @@ final class SgfWriterTest {
         }
     }
 
-    @Test void writerDoesNotChangeTreeOnRepeatedRoundTrip() throws Exception {
-        GameCollection original = SgfReader.read(SgfFixtures.valid().get("variationOfAVariation"));
-        String first = SgfWriter.write(original);
-        String second = SgfWriter.write(SgfReader.read(first));
-        assertEquals(first, second);
+    @Test void writerIsByteStableAcrossAllFixtures() {
+        for (var entry : SgfFixtures.valid().entrySet()) {
+            String first = SgfWriter.write(SgfReader.read(entry.getValue()));
+            String second = SgfWriter.write(SgfReader.read(first));
+            assertEquals(first, second, entry.getKey() + " second serialization");
+            assertTrue(java.util.Arrays.equals(
+                    first.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    second.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    entry.getKey() + " UTF-8 bytes");
+        }
     }
 
     /**
