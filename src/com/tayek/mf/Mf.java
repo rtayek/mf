@@ -57,11 +57,26 @@ public class Mf extends Application {
             error.showAndWait();
         }
     }
-    private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=rootNode;String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);reloadPath();}
+    private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=rootNode;String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation,this::playMove);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);reloadPath();}
     private List<GameNode> pathNodes(){ArrayList<GameNode> reversed=new ArrayList<>();for(GameNode n=currentNode;n!=null;n=n.parent())reversed.add(n);ArrayList<GameNode> result=new ArrayList<>();for(int i=reversed.size()-1;i>=0;i--)result.add(reversed.get(i));return result;}
     private void reloadPath(){if(runtime==null)return;runtime.showPath(pathNodes());updateDocumentPane();updateStatus();}
     private void updateDocumentPane(){if(currentNode==null){nodeName.setText("");comment.setText("");return;}nodeName.setText(String.join("\n",currentNode.property("N")));comment.setText(String.join("\n\n",currentNode.property("C")));comment.positionCaret(0);}
     private void selectVariation(int child){if(currentNode==null||child<0||child>=currentNode.children().size())return;currentNode=currentNode.children().get(child);reloadPath();}
+    private void playMove(int x, int y) {
+        if (activeGame == null || !activeGame.type().equals(GameType.GO) || currentNode == null) return;
+        Stone side = runtime.sideToMove();
+        for (GameNode child : currentNode.children()) {
+            Move move = child.move();
+            if (move != null && move.x() == x && move.y() == y && move.stone() == side) {
+                currentNode = child;
+                reloadPath();
+                return;
+            }
+        }
+        if (!runtime.tryPlay(x, y)) return;
+        currentNode = currentNode.addMove(new Move(x, y, side));
+        reloadPath();
+    }
     private boolean treeBack(){if(currentNode==null||currentNode==rootNode)return false;currentNode=currentNode.parent();reloadPath();return true;}
     private boolean treeForward(int child){if(currentNode==null||currentNode.children().isEmpty())return false;currentNode=currentNode.children().get(Math.min(child,currentNode.children().size()-1));reloadPath();return true;}
     private boolean chooseSibling(int delta){if(currentNode==null||currentNode==rootNode||currentNode.parent()==null)return false;List<GameNode>s=currentNode.parent().children();if(s.size()<2)return false;int i=s.indexOf(currentNode),n=(i+delta+s.size())%s.size();currentNode=s.get(n);reloadPath();return true;}
