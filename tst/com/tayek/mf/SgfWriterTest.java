@@ -90,8 +90,13 @@ final class SgfWriterTest {
         for (String name : java.util.List.of(
                 "39016682-086-DonJuan-rtayek.sgf",
                 "smart-go-1.sgf")) {
-            java.nio.file.Path source = java.nio.file.Path.of("tmp", name);
-            GameCollection original = SgfReader.read(source);
+            String resource = "/sgf/" + name;
+            String sgf;
+            try (var stream = SgfWriterTest.class.getResourceAsStream(resource)) {
+                assertTrue(stream != null, "missing test resource " + resource);
+                sgf = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            GameCollection original = SgfReader.read(sgf);
             String first = SgfWriter.write(original);
             GameCollection restored = SgfReader.read(first);
             assertCollectionsEqual(original, restored, name);
