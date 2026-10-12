@@ -22,6 +22,17 @@ public final class GameNode {
         this.properties = List.copyOf(properties);
     }
 
+    /** Create a child with its SGF move property, without modifying existing nodes. */
+    public GameNode addMove(Move move) {
+        if (move == null || move.x() < 0 || move.y() < 0)
+            throw new IllegalArgumentException("expected a board move");
+        String id = move.stone() == Stone.BLACK ? "B" : "W";
+        String point = "" + (char) ('a' + move.x()) + (char) ('a' + move.y());
+        GameNode child = new GameNode(move, this, List.of(new SgfProperty(id, List.of(point))));
+        addChild(child);
+        return child;
+    }
+
     public Move move() { return move; }
     public GameNode parent() { return parent; }
     public List<SgfProperty> properties() { return properties; }
