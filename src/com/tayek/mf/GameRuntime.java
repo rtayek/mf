@@ -15,11 +15,12 @@ interface GameRuntime {
     Node view();
     void showPath(List<GameNode> path);
     default void setShowSingleContinuation(boolean show) { }
+    default boolean tryPlay(int x, int y) { return false; }
     int moveNumber();
     Stone sideToMove();
 
-    static GameRuntime forGame(Game game, Runnable positionChanged, IntConsumer variationSelected) {
-        if (game.type().equals(GameType.GO)) return new GoRuntime(game, positionChanged, variationSelected);
+    static GameRuntime forGame(Game game, Runnable positionChanged, IntConsumer variationSelected, java.util.function.BiConsumer<Integer,Integer> moveRequested) {
+        if (game.type().equals(GameType.GO)) return new GoRuntime(game, positionChanged, variationSelected, moveRequested);
         if (game.type().equals(GameType.GOMOKU)) return new GomokuRuntime(game);
         if (game.type().equals(GameType.LINES_OF_ACTION)) return new LoaRuntime();
         throw new IllegalArgumentException(
@@ -38,12 +39,13 @@ interface GameRuntime {
         private BoardPosition position;
         private final BoardView view;
 
-        GoRuntime(Game game, Runnable positionChanged, IntConsumer variationSelected) {
+        GoRuntime(Game game, Runnable positionChanged, IntConsumer variationSelected, java.util.function.BiConsumer<Integer,Integer> moveRequested) {
             size = game.boardSize();
             position = new BoardPosition(size, size);
             view = new BoardView(position);
             view.setOnPositionChanged(positionChanged);
             view.setOnVariationSelected(variationSelected);
+            view.setOnMoveRequested(moveRequested);
         }
 
         @Override public Node view() { return view; }
@@ -155,6 +157,12 @@ interface GameRuntime {
                 n = n / 26 - 1;
             } while (n >= 0);
             return result.reverse().toString();
+        }
+
+        @Override public boolean tryPlay(int x, int y) {
+            if (!position.play(x, y)) return false;
+            view.playAcceptedMove(position.lastMoveCreatedAtari());
+            return true;
         }
 
         @Override public int moveNumber() { return position.moveNumber(); }
