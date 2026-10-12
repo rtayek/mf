@@ -31,8 +31,7 @@ sourceSets {
     test {
         java.setSrcDirs(listOf("tst"))
         resources {
-            setSrcDirs(listOf("tst"))
-            exclude("**/*.java")
+            setSrcDirs(listOf("tst/resources"))
         }
     }
 }
