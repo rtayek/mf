@@ -9,12 +9,17 @@ import java.util.Objects;
 
 /** Writes the original SGF node properties, including unknown properties and variations. */
 public final class SgfWriter {
+    private static final int NODES_PER_LINE = 12;
+
     private SgfWriter() { }
 
     public static String write(GameCollection collection) {
         Objects.requireNonNull(collection, "collection");
         StringBuilder out = new StringBuilder();
-        for (Game game : collection.games()) writeTree(out, game.tree().root());
+        for (Game game : collection.games()) {
+            if (!out.isEmpty()) out.append('\n');
+            writeTree(out, game.tree().root());
+        }
         return out.toString();
     }
 
@@ -25,8 +30,14 @@ public final class SgfWriter {
     private static void writeTree(StringBuilder out, GameNode start) {
         out.append('(');
         GameNode node = start;
+        int nodesOnLine = 0;
         while (true) {
+            if (nodesOnLine == NODES_PER_LINE) {
+                out.append('\n');
+                nodesOnLine = 0;
+            }
             writeNode(out, node);
+            nodesOnLine++;
             List<GameNode> children = node.children();
             if (children.size() == 1) {
                 node = children.get(0);
