@@ -90,7 +90,7 @@ final class SgfWriterTest {
         for (String name : java.util.List.of(
                 "39016682-086-DonJuan-rtayek.sgf",
                 "smart-go-1.sgf")) {
-            String resource = "/sgf/" + name;
+            String resource = name;
             String sgf;
             try (var stream = SgfWriterTest.class.getResourceAsStream(resource)) {
                 assertTrue(stream != null, "missing test resource " + resource);
