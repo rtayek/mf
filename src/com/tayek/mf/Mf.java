@@ -23,7 +23,44 @@ public class Mf extends Application {
     private GameNode currentNode; private GameNode rootNode;
     private final CommandHistory editHistory = new CommandHistory();
     private MenuItem undoItem, redoItem;
-    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));file.getItems().addAll(open,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());editMenu.getItems().addAll(undoItem,redoItem);updateEditMenu();MenuBar menuBar=new MenuBar(file,editMenu,viewMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{if(rootNode==null)return;boolean changed=false;switch(e.getCode()){case LEFT->changed=treeBack();case RIGHT->changed=treeForward(0);case UP->changed=chooseSibling(-1);case DOWN->changed=chooseSibling(1);case HOME->changed=treeHome();case END->changed=treeEnd();default->{}}if(changed)e.consume();});stage.setTitle("mf - SGF Viewer");stage.setScene(scene);stage.show();}
+    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));file.getItems().addAll(open,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());editMenu.getItems().addAll(undoItem,redoItem);updateEditMenu();Menu helpMenu=new Menu("Help");MenuItem helpItem=new MenuItem("Keyboard and Mouse Help");helpItem.setOnAction(e->showHelp(stage));helpMenu.getItems().add(helpItem);MenuBar menuBar=new MenuBar(file,editMenu,viewMenu,helpMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{
+        if(e.getCode()==javafx.scene.input.KeyCode.F1){showHelp(stage);e.consume();return;}
+        if(e.isControlDown() && !e.isAltDown() && !e.isMetaDown()){
+            if(e.getCode()==javafx.scene.input.KeyCode.Z){
+                if(e.isShiftDown())redoEdit();else undoEdit();
+                e.consume();return;
+            }
+            if(e.getCode()==javafx.scene.input.KeyCode.Y){redoEdit();e.consume();return;}
+        }
+        if(rootNode==null||e.isControlDown()||e.isAltDown()||e.isMetaDown())return;
+        boolean changed=false;switch(e.getCode()){case LEFT->changed=treeBack();case RIGHT->changed=treeForward(0);case UP->changed=chooseSibling(-1);case DOWN->changed=chooseSibling(1);case HOME->changed=treeHome();case END->changed=treeEnd();default->{}}if(changed)e.consume();});stage.setTitle("mf - SGF Viewer");stage.setScene(scene);stage.show();}
+    private void showHelp(Stage stage) {
+        Alert help = new Alert(Alert.AlertType.INFORMATION);
+        help.initOwner(stage);
+        help.setTitle("MF Help");
+        help.setHeaderText("Keyboard and mouse controls");
+        help.setContentText("""
+                Editing
+                  Ctrl+Z             Undo an added move
+                  Ctrl+Y             Redo an undone move
+                  Ctrl+Shift+Z       Redo (alternative)
+                  Note: existing SGF moves cannot yet be deleted.
+
+                Navigation
+                  Left / Right       Previous / next move
+                  Up / Down          Previous / next variation
+                  Home / End         Root / end of main line
+
+                Mouse
+                  Click empty point  Add a legal Go move
+                  Click a variation  Follow that variation
+                  Hover over board   Preview a move or variation
+
+                F1                   Show this help
+                """);
+        help.getDialogPane().setMinWidth(520);
+        help.showAndWait();
+    }
     private void openSgf(Stage stage){FileChooser chooser=new FileChooser();chooser.setTitle("Open SGF Game");chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SGF files","*.sgf"));String savedDirectory=preferences.get(LAST_SGF_DIRECTORY,"");if(!savedDirectory.isBlank()){File directory=new File(savedDirectory);if(directory.isDirectory())chooser.setInitialDirectory(directory);}File file=chooser.showOpenDialog(stage);if(file==null)return;File parent=file.getParentFile();if(parent!=null&&parent.isDirectory())preferences.put(LAST_SGF_DIRECTORY,parent.getAbsolutePath());try{GameCollection collection=SgfReader.read(file.toPath());Game game=collection.games().stream().findFirst().orElseThrow(()->new IllegalArgumentException("SGF collection contains no games"));showGame(game);activeCollection=collection;sourceFile=file;saveAs.setDisable(false);stage.setTitle("mf - "+game.name());}catch(Exception ex){new Alert(Alert.AlertType.ERROR,"Could not load SGF:\n"+ex.getMessage(),ButtonType.OK).showAndWait();}}
     private void saveAs(Stage stage){
         if(activeCollection==null)return;
