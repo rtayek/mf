@@ -59,7 +59,7 @@ public final class BoardPosition {
         boolean[][] before=groupsInAtari(stones,opponent);
         Stone[][] candidate=copyBoard(stones);
         if(!applyMove(candidate,move))return false;
-        if(moveNumber>0&&sameBoard(candidate,positionAfter(moveNumber-1)))return false;
+        if(moveNumber>0 && moves.get(moveNumber-1).x()>=0 && sameBoard(candidate,positionAfter(moveNumber-1)))return false;
         lastMoveCreatedAtari=hasNewAtari(before,groupsInAtari(candidate,opponent));
         if(truncate)while(moves.size()>moveNumber)moves.remove(moves.size()-1);
         moves.add(move);moveNumber++;copyInto(candidate,stones);return true;
