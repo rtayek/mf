@@ -22,8 +22,8 @@ public class Mf extends Application {
     private GameRuntime runtime; private CheckMenuItem showSingleContinuation;
     private GameNode currentNode; private GameNode rootNode;
     private final CommandHistory editHistory = new CommandHistory();
-    private MenuItem undoItem, redoItem;
-    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));file.getItems().addAll(open,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());editMenu.getItems().addAll(undoItem,redoItem);updateEditMenu();Menu helpMenu=new Menu("Help");MenuItem helpItem=new MenuItem("Keyboard and Mouse Help");helpItem.setOnAction(e->showHelp(stage));helpMenu.getItems().add(helpItem);MenuBar menuBar=new MenuBar(file,editMenu,viewMenu,helpMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{
+    private MenuItem undoItem, redoItem, deleteBranchItem;
+    @Override public void start(Stage stage){status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));file.getItems().addAll(open,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());deleteBranchItem=new MenuItem("Delete Branch");deleteBranchItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.DELETE));deleteBranchItem.setOnAction(e->deleteBranch());editMenu.getItems().addAll(undoItem,redoItem,new SeparatorMenuItem(),deleteBranchItem);updateEditMenu();Menu helpMenu=new Menu("Help");MenuItem helpItem=new MenuItem("Keyboard and Mouse Help");helpItem.setOnAction(e->showHelp(stage));helpMenu.getItems().add(helpItem);MenuBar menuBar=new MenuBar(file,editMenu,viewMenu,helpMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{
         if(e.getCode()==javafx.scene.input.KeyCode.F1){showHelp(stage);e.consume();return;}
         if(e.isControlDown() && !e.isAltDown() && !e.isMetaDown()){
             if(e.getCode()==javafx.scene.input.KeyCode.Z){
@@ -33,6 +33,7 @@ public class Mf extends Application {
             if(e.getCode()==javafx.scene.input.KeyCode.Y){redoEdit();e.consume();return;}
         }
         if(rootNode==null||e.isControlDown()||e.isAltDown()||e.isMetaDown())return;
+        if(e.getCode()==javafx.scene.input.KeyCode.DELETE){deleteBranch();e.consume();return;}
         boolean changed=false;switch(e.getCode()){case LEFT->changed=treeBack();case RIGHT->changed=treeForward(0);case UP->changed=chooseSibling(-1);case DOWN->changed=chooseSibling(1);case HOME->changed=treeHome();case END->changed=treeEnd();default->{}}if(changed)e.consume();});stage.setTitle("mf - SGF Viewer");stage.setScene(scene);stage.show();}
     private void showHelp(Stage stage) {
         Alert help = new Alert(Alert.AlertType.INFORMATION);
@@ -44,7 +45,7 @@ public class Mf extends Application {
                   Ctrl+Z             Undo an added move
                   Ctrl+Y             Redo an undone move
                   Ctrl+Shift+Z       Redo (alternative)
-                  Note: existing SGF moves cannot yet be deleted.
+                  Delete             Delete selected branch (and descendants)\n                  Ctrl+Z             Restore a deleted branch
 
                 Navigation
                   Left / Right       Previous / next move
@@ -98,7 +99,7 @@ public class Mf extends Application {
     }
     private void showGame(Game game){editHistory.clear();updateEditMenu();activeGame=game;rootNode=game.tree().root();currentNode=rootNode;String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation,this::playMove);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);reloadPath();}
     private List<GameNode> pathNodes(){ArrayList<GameNode> reversed=new ArrayList<>();for(GameNode n=currentNode;n!=null;n=n.parent())reversed.add(n);ArrayList<GameNode> result=new ArrayList<>();for(int i=reversed.size()-1;i>=0;i--)result.add(reversed.get(i));return result;}
-    private void reloadPath(){if(runtime==null)return;runtime.showPath(pathNodes());updateDocumentPane();updateStatus();}
+    private void reloadPath(){if(runtime==null)return;runtime.showPath(pathNodes());updateDocumentPane();updateStatus();updateEditMenu();}
     private void updateDocumentPane(){if(currentNode==null){nodeName.setText("");comment.setText("");return;}nodeName.setText(String.join("\n",currentNode.property("N")));comment.setText(String.join("\n\n",currentNode.property("C")));comment.positionCaret(0);}
     private void selectVariation(int child){if(currentNode==null||child<0||child>=currentNode.children().size())return;currentNode=currentNode.children().get(child);reloadPath();}
     private void playMove(int x, int y) {
@@ -122,11 +123,22 @@ public class Mf extends Application {
         updateEditMenu();
     }
     private void updateEditMenu() {
+        if (deleteBranchItem != null) deleteBranchItem.setDisable(currentNode == null || currentNode == rootNode);
         if (undoItem != null) undoItem.setDisable(!editHistory.canUndo());
         if (redoItem != null) redoItem.setDisable(!editHistory.canRedo());
     }
+    private void deleteBranch() {
+        if (currentNode == null || currentNode == rootNode) return;
+        GameNode parent = currentNode.parent();
+        editHistory.execute(new RemoveBranchCommand(currentNode));
+        currentNode = parent;
+        reloadPath();
+        updateEditMenu();
+    }
     private void undoEdit() {
+        Command pending = editHistory.nextUndo();
         if (editHistory.undo()) {
+            if (pending instanceof RemoveBranchCommand removed) currentNode = removed.branch();
             while (currentNode != null && !isAttachedToRoot(currentNode))
                 currentNode = currentNode.parent();
             if (currentNode == null) currentNode = rootNode;
@@ -138,6 +150,7 @@ public class Mf extends Application {
         Command pending = editHistory.nextRedo();
         if (editHistory.redo()) {
             if (pending instanceof AddNodeCommand add) currentNode = add.child();
+            else if (pending instanceof RemoveBranchCommand removed) currentNode = removed.parent();
             reloadPath();
         }
         updateEditMenu();
