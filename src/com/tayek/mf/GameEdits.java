@@ -71,3 +71,23 @@ final class AddNodeCommand implements Command {
     @Override public void execute() { parent.insertChild(index, child); }
     @Override public void undo() { parent.removeChild(child); }
 }
+
+/** Detach an existing variation without destroying its subtree or its position. */
+final class RemoveBranchCommand implements Command {
+    private final GameNode parent;
+    private final GameNode branch;
+    private final int index;
+
+    RemoveBranchCommand(GameNode branch) {
+        this.branch = Objects.requireNonNull(branch);
+        this.parent = Objects.requireNonNull(branch.parent(), "cannot remove the root");
+        this.index = parent.children().indexOf(branch);
+        if (index < 0) throw new IllegalArgumentException("branch is not attached");
+    }
+
+    GameNode parent() { return parent; }
+    GameNode branch() { return branch; }
+
+    @Override public void execute() { parent.removeChild(branch); }
+    @Override public void undo() { parent.insertChild(index, branch); }
+}
