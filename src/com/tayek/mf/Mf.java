@@ -43,7 +43,7 @@ public class Mf extends Application {
         help.setHeaderText("Keyboard and mouse controls");
         help.setContentText("""
                 Editing
-                  Ctrl+S             Save current file\n                  Ctrl+Z             Undo an added move
+                  Ctrl+S             Save current file\n                  File > Save As     Save a separate copy\n                  Ctrl+Z             Undo an added move
                   Ctrl+Y             Redo an undone move
                   Ctrl+Shift+Z       Redo (alternative)
                   Delete             Delete selected branch (and descendants)\n                  Ctrl+Z             Restore a deleted branch
@@ -86,7 +86,7 @@ public class Mf extends Application {
             editHistory.markSaved();
             updateTitle();
         } catch(Exception ex) {
-            Alert error=new Alert(Alert.AlertType.ERROR,"Could not save SGF:\\n"+ex.getMessage(),ButtonType.OK);
+            Alert error=new Alert(Alert.AlertType.ERROR,"Could not save SGF:\n"+ex.getMessage(),ButtonType.OK);
             error.initOwner(stage);
             error.showAndWait();
         }
