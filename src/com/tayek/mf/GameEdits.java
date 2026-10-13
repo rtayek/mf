@@ -13,18 +13,26 @@ interface Command {
 /** Per-document history; navigation does not enter the history. */
 final class CommandHistory {
     private final Deque<Command> undo = new ArrayDeque<>();
+    private final Deque<Long> previous = new ArrayDeque<>();
+    private final Deque<Long> next = new ArrayDeque<>();
+    private long revision, saved, counter;
     private final Deque<Command> redo = new ArrayDeque<>();
 
     void execute(Command command) {
         Objects.requireNonNull(command).execute();
+        previous.push(revision);
+        revision = ++counter;
         undo.push(command);
         redo.clear();
+        next.clear();
     }
 
     boolean canUndo() { return !undo.isEmpty(); }
     boolean canRedo() { return !redo.isEmpty(); }
     Command nextRedo() { return redo.peek(); }
     Command nextUndo() { return undo.peek(); }
+    boolean isModified() { return revision != saved; }
+    void markSaved() { saved = revision; }
 
     boolean undo() {
         if (!canUndo()) return false;
@@ -32,6 +40,8 @@ final class CommandHistory {
         command.undo();
         undo.pop();
         redo.push(command);
+        next.push(revision);
+        revision = previous.pop();
         return true;
     }
 
@@ -41,10 +51,12 @@ final class CommandHistory {
         command.execute();
         redo.pop();
         undo.push(command);
+        previous.push(revision);
+        revision = next.pop();
         return true;
     }
 
-    void clear() { undo.clear(); redo.clear(); }
+    void clear() { undo.clear(); redo.clear(); previous.clear(); next.clear(); revision = ++counter; saved = revision; }
 }
 
 /** Generic tree edit; the caller creates and validates any game-specific move. */
