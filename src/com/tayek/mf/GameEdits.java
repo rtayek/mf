@@ -24,6 +24,7 @@ final class CommandHistory {
     boolean canUndo() { return !undo.isEmpty(); }
     boolean canRedo() { return !redo.isEmpty(); }
     Command nextRedo() { return redo.peek(); }
+    Command nextUndo() { return undo.peek(); }
 
     boolean undo() {
         if (!canUndo()) return false;
