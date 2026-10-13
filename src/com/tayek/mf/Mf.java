@@ -22,8 +22,8 @@ public class Mf extends Application {
     private GameRuntime runtime; private CheckMenuItem showSingleContinuation;
     private GameNode currentNode; private GameNode rootNode;
     private final CommandHistory editHistory = new CommandHistory();
-    private MenuItem undoItem, redoItem, deleteBranchItem;
-    @Override public void start(Stage stage){mainStage=stage;status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));saveItem=new MenuItem("Save");saveItem.setDisable(true);saveItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.S,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));saveItem.setOnAction(e->save(stage));file.getItems().addAll(open,saveItem,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());deleteBranchItem=new MenuItem("Delete Branch");deleteBranchItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.DELETE));deleteBranchItem.setOnAction(e->deleteBranch());editMenu.getItems().addAll(undoItem,redoItem,new SeparatorMenuItem(),deleteBranchItem);updateEditMenu();Menu helpMenu=new Menu("Help");MenuItem helpItem=new MenuItem("Keyboard and Mouse Help");helpItem.setOnAction(e->showHelp(stage));helpMenu.getItems().add(helpItem);MenuBar menuBar=new MenuBar(file,editMenu,viewMenu,helpMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{
+    private MenuItem undoItem, redoItem, deleteBranchItem, passItem;
+    @Override public void start(Stage stage){mainStage=stage;status=new Label();status.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");BorderPane.setAlignment(status,Pos.CENTER);BorderPane.setMargin(status,new Insets(4,0,12,0));welcome=new Label("Open an SGF file to begin");welcome.setStyle("-fx-font-family: serif; -fx-font-size: 22px;");BorderPane.setAlignment(welcome,Pos.CENTER);MenuItem open=new MenuItem("Open SGF...");open.setOnAction(e->openSgf(stage));Menu file=new Menu("File");saveAs=new MenuItem("Save As...");saveAs.setDisable(true);saveAs.setOnAction(e->saveAs(stage));saveItem=new MenuItem("Save");saveItem.setDisable(true);saveItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.S,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));saveItem.setOnAction(e->save(stage));file.getItems().addAll(open,saveItem,saveAs);Menu viewMenu=new Menu("View");showSingleContinuation=new CheckMenuItem("Show single next-move label");showSingleContinuation.setSelected(true);showSingleContinuation.setOnAction(e->{if(runtime!=null){runtime.setShowSingleContinuation(showSingleContinuation.isSelected());reloadPath();}});viewMenu.getItems().add(showSingleContinuation);Menu editMenu=new Menu("Edit");undoItem=new MenuItem("Undo");redoItem=new MenuItem("Redo");undoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Z,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));redoItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Y,javafx.scene.input.KeyCombination.SHORTCUT_DOWN));undoItem.setOnAction(e->undoEdit());redoItem.setOnAction(e->redoEdit());deleteBranchItem=new MenuItem("Delete Branch");deleteBranchItem.setAccelerator(new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.DELETE));deleteBranchItem.setOnAction(e->deleteBranch());passItem=new MenuItem("Pass");passItem.setOnAction(e->passMove());editMenu.getItems().addAll(undoItem,redoItem,new SeparatorMenuItem(),deleteBranchItem,passItem);updateEditMenu();Menu helpMenu=new Menu("Help");MenuItem helpItem=new MenuItem("Keyboard and Mouse Help");helpItem.setOnAction(e->showHelp(stage));helpMenu.getItems().add(helpItem);MenuBar menuBar=new MenuBar(file,editMenu,viewMenu,helpMenu);content=new BorderPane();content.setPadding(new Insets(0,0,8,0));content.setCenter(welcome);nodeName=new Label();nodeName.setWrapText(true);nodeName.setStyle("-fx-font-family: serif; -fx-font-size: 18px; -fx-font-weight: bold;");comment=new TextArea();comment.setEditable(false);comment.setWrapText(true);comment.setStyle("-fx-font-family: serif; -fx-font-size: 16px;");VBox.setVgrow(comment,Priority.ALWAYS);documentPane=new VBox(8,nodeName,comment);documentPane.setPadding(new Insets(12));documentPane.setPrefWidth(300);documentPane.setMinWidth(220);BorderPane root=new BorderPane();root.setTop(menuBar);root.setCenter(content);Scene scene=new Scene(root,760,800);scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED,e->{
         if(e.getCode()==javafx.scene.input.KeyCode.F1){showHelp(stage);e.consume();return;}
         if(e.isControlDown() && !e.isAltDown() && !e.isMetaDown()){
             if(e.getCode()==javafx.scene.input.KeyCode.Z){
@@ -46,7 +46,7 @@ public class Mf extends Application {
                   Ctrl+S             Save current file\n                  File > Save As     Save a separate copy\n                  Ctrl+Z             Undo an added move
                   Ctrl+Y             Redo an undone move
                   Ctrl+Shift+Z       Redo (alternative)
-                  Delete             Delete selected branch (and descendants)\n                  Ctrl+Z             Restore a deleted branch
+                  Edit > Pass        Add a Go pass move\n                  Delete             Delete selected branch (and descendants)\n                  Ctrl+Z             Restore a deleted branch
 
                 Navigation
                   Left / Right       Previous / next move
@@ -152,7 +152,23 @@ public class Mf extends Application {
         reloadPath();
         updateEditMenu();
     }
+    private void passMove() {
+        if(activeGame==null || activeGame.type()!=GameType.GO || currentNode==null)return;
+        Stone side=runtime.sideToMove();
+        for(GameNode child:currentNode.children()) {
+            Move move=child.move();
+            if(move!=null && move.x()<0 && move.y()<0 && move.stone()==side) {
+                currentNode=child;reloadPath();return;
+            }
+        }
+        GameNode child=new GameNode(new Move(-1,-1,side),currentNode,
+                List.of(new SgfProperty(side==Stone.BLACK?"B":"W",List.of(""))));
+        editHistory.execute(new AddNodeCommand(currentNode,child));
+        currentNode=child;
+        reloadPath();
+    }
     private void updateEditMenu() {
+        if(passItem!=null)passItem.setDisable(activeGame==null || activeGame.type()!=GameType.GO);
         if (deleteBranchItem != null) deleteBranchItem.setDisable(currentNode == null || currentNode == rootNode);
         if (undoItem != null) undoItem.setDisable(!editHistory.canUndo());
         if (redoItem != null) redoItem.setDisable(!editHistory.canRedo());
