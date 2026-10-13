@@ -10,6 +10,7 @@ public final class BoardPosition {
     private final int width, height;
     private final Stone[][] stones;
     private final List<Move> moves = new ArrayList<>();
+    private List<SetupStone> initialSetup = List.of();
     private int moveNumber;
     private Stone sideToMoveOverride;
     private boolean lastMoveCreatedAtari;
@@ -25,7 +26,7 @@ public final class BoardPosition {
     public boolean lastMoveCreatedAtari(){return lastMoveCreatedAtari;}
     public Move lastMove(){return moveNumber==0?null:moves.get(moveNumber-1);}
     public Stone sideToMove(){
-        if (sideToMoveOverride != null) return sideToMoveOverride;
+        if (sideToMoveOverride != null && lastMove()==null) return sideToMoveOverride;
         Move last=lastMove();
         return last==null?Stone.BLACK:last.stone().opposite();
     }
@@ -36,13 +37,15 @@ public final class BoardPosition {
 
     public void loadRecord(List<SetupStone> setup, List<Move> loaded, Stone playerToMove) {
         moves.clear(); moves.addAll(loaded); moveNumber=moves.size();
+        initialSetup = List.copyOf(setup);
         sideToMoveOverride = playerToMove;
-        rebuild(setup);
+        rebuild(initialSetup);
     }
 
     public record SetupStone(int x, int y, Stone stone) { }
 
     public boolean play(int x,int y){return play(new Move(x,y,sideToMove()),true);}
+    public boolean pass(){return play(new Move(-1,-1,sideToMove()),true);}
 
     private boolean play(Move move, boolean truncate) {
         lastMoveCreatedAtari=false;
@@ -67,9 +70,9 @@ public final class BoardPosition {
     public boolean first(){if(moveNumber==0)return false;moveNumber=0;rebuild();return true;}
     public boolean last(){if(moveNumber==moves.size())return false;moveNumber=moves.size();rebuild();return true;}
 
-    private void rebuild(){rebuild(List.of());}
+    private void rebuild(){rebuild(initialSetup);}
     private void rebuild(List<SetupStone> setup){lastMoveCreatedAtari=false;clear(stones);for(SetupStone s:setup)if(inside(s.x(),s.y()))stones[s.y()][s.x()]=s.stone();for(int i=0;i<moveNumber;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(stones,m))throw new IllegalStateException("recorded move is illegal: "+m);}}
-    private Stone[][] positionAfter(int count){Stone[][] b=newBoard();for(int i=0;i<count;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(b,m))throw new IllegalStateException("recorded move is illegal: "+m);}return b;}
+    private Stone[][] positionAfter(int count){Stone[][] b=newBoard();for(SetupStone stone:initialSetup)if(inside(stone.x(),stone.y()))b[stone.y()][stone.x()]=stone.stone();for(int i=0;i<count;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(b,m))throw new IllegalStateException("recorded move is illegal: "+m);}return b;}
 
     private boolean applyMove(Stone[][] board,Move move){int x=move.x(),y=move.y();if(!inside(x,y)||board[y][x]!=Stone.EMPTY)return false;board[y][x]=move.stone();Stone opponent=move.stone().opposite();boolean[][] checked=new boolean[height][width];for(int[]d:directions){int nx=x+d[0],ny=y+d[1];if(!inside(nx,ny)||checked[ny][nx]||board[ny][nx]!=opponent)continue;Group group=groupAt(board,nx,ny);for(Point p:group.stones())checked[p.y()][p.x()]=true;if(group.liberties()==0)for(Point p:group.stones())board[p.y()][p.x()]=Stone.EMPTY;}if(groupAt(board,x,y).liberties()==0){board[y][x]=Stone.EMPTY;return false;}return true;}
     private boolean[][] groupsInAtari(Stone[][] board,Stone color){boolean[][]a=new boolean[height][width],seen=new boolean[height][width];for(int y=0;y<height;y++)for(int x=0;x<width;x++){if(seen[y][x]||board[y][x]!=color)continue;Group g=groupAt(board,x,y);for(Point p:g.stones())seen[p.y()][p.x()]=true;if(g.liberties()==1)for(Point p:g.stones())a[p.y()][p.x()]=true;}return a;}
