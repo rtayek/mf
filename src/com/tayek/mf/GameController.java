@@ -92,7 +92,7 @@ public final class GameController {
     }
     public BoardPosition position() {
         requireGame();
-        if (game.type() != GameType.GO) throw new UnsupportedOperationException("Go board only");
+        if (!game.type().equals(GameType.GO)) throw new UnsupportedOperationException("Go board only");
         BoardPosition board = new BoardPosition(game.boardSize(), game.boardSize());
         List<Move> moves = new ArrayList<>();
         List<BoardPosition.SetupStone> setup = new ArrayList<>();
