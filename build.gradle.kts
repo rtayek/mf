@@ -23,16 +23,11 @@ application {
 sourceSets {
     main {
         java.setSrcDirs(listOf("src"))
-        resources {
-            setSrcDirs(listOf("src"))
-            exclude("**/*.java")
-        }
+        resources.setSrcDirs(listOf("resources"))
     }
     test {
         java.setSrcDirs(listOf("tst"))
-        resources {
-            setSrcDirs(listOf("tst/resources"))
-        }
+        resources.setSrcDirs(listOf("tst-resources"))
     }
 }
 
