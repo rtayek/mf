@@ -18,7 +18,7 @@ public final class MfCli {
     }
     public void printBoard() {
         if (controller.game() == null) { out.println("No game open."); return; }
-        if (controller.game().type() != GameType.GO) {
+        if (!controller.game().type().equals(GameType.GO)) {
             out.println("Text board is currently available for Go only."); return;
         }
         BoardPosition board = controller.position();
