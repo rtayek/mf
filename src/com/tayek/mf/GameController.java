@@ -60,6 +60,13 @@ public final class GameController {
 
     public boolean left() { return select(current == null ? null : current.parent()); }
     public boolean right() { return current != null && !current.children().isEmpty() && select(current.children().get(0)); }
+    public boolean home() { return game != null && select(game.tree().root()); }
+    public boolean end() {
+        if (current == null) return false;
+        GameNode node = current;
+        while (!node.children().isEmpty()) node = node.children().get(0);
+        return select(node);
+    }
     public boolean up() { return sibling(-1); }
     public boolean down() { return sibling(1); }
     public boolean select(GameNode node) {
