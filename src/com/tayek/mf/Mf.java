@@ -99,7 +99,7 @@ public class Mf extends Application {
     private void updateTitle() {
         if(mainStage==null)return;
         String name=sourceFile!=null?sourceFile.getName():"SGF Viewer";
-        mainStage.setTitle("mf - "+name+(editHistory.isModified()?" *":""));
+        mainStage.setTitle("mf - "+name+(controller.modified()?" *":""));
     }
     private void save(Stage stage) {
         if(activeCollection==null)return;
