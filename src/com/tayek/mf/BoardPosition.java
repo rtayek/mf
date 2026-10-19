@@ -14,6 +14,7 @@ public final class BoardPosition {
     private int moveNumber;
     private Stone sideToMoveOverride;
     private boolean lastMoveCreatedAtari;
+    private int lastMoveCaptures;
 
     public BoardPosition(int width, int height) {
         if (width < 2 || height < 2) throw new IllegalArgumentException("board must be at least 2 x 2");
@@ -24,6 +25,7 @@ public final class BoardPosition {
     public Stone stoneAt(int x,int y){return stones[y][x];}
     public int moveNumber(){return moveNumber;} public int moveCount(){return moves.size();}
     public boolean lastMoveCreatedAtari(){return lastMoveCreatedAtari;}
+    public int lastMoveCaptures(){return lastMoveCaptures;}
     public Move lastMove(){return moveNumber==0?null:moves.get(moveNumber-1);}
     public Stone sideToMove(){
         if (sideToMoveOverride != null && lastMove()==null) return sideToMoveOverride;
@@ -49,6 +51,7 @@ public final class BoardPosition {
 
     private boolean play(Move move, boolean truncate) {
         lastMoveCreatedAtari=false;
+        lastMoveCaptures=0;
         if (move.x()<0 || move.y()<0) {
             if(truncate) while(moves.size()>moveNumber)moves.remove(moves.size()-1);
             moves.add(move); moveNumber++; return true;
@@ -61,6 +64,7 @@ public final class BoardPosition {
         if(!applyMove(candidate,move))return false;
         if(moveNumber>0 && moves.get(moveNumber-1).x()>=0 && sameBoard(candidate,positionAfter(moveNumber-1)))return false;
         lastMoveCreatedAtari=hasNewAtari(before,groupsInAtari(candidate,opponent));
+        lastMoveCaptures=countStones(stones,opponent)-countStones(candidate,opponent);
         if(truncate)while(moves.size()>moveNumber)moves.remove(moves.size()-1);
         moves.add(move);moveNumber++;copyInto(candidate,stones);return true;
     }
@@ -71,7 +75,27 @@ public final class BoardPosition {
     public boolean last(){if(moveNumber==moves.size())return false;moveNumber=moves.size();rebuild();return true;}
 
     private void rebuild(){rebuild(initialSetup);}
-    private void rebuild(List<SetupStone> setup){lastMoveCreatedAtari=false;clear(stones);for(SetupStone s:setup)if(inside(s.x(),s.y()))stones[s.y()][s.x()]=s.stone();for(int i=0;i<moveNumber;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(stones,m))throw new IllegalStateException("recorded move is illegal: "+m);}}
+    private void rebuild(List<SetupStone> setup){
+        lastMoveCreatedAtari=false;
+        lastMoveCaptures=0;
+        clear(stones);
+        for(SetupStone s:setup)if(inside(s.x(),s.y()))stones[s.y()][s.x()]=s.stone();
+        for(int i=0;i<moveNumber;i++){
+            Move m=moves.get(i);
+            if(m.x()<0||m.y()<0){lastMoveCreatedAtari=false;lastMoveCaptures=0;continue;}
+            Stone opponent=m.stone().opposite();
+            boolean[][] before=groupsInAtari(stones,opponent);
+            int count=countStones(stones,opponent);
+            if(!applyMove(stones,m))throw new IllegalStateException("recorded move is illegal: "+m);
+            lastMoveCreatedAtari=hasNewAtari(before,groupsInAtari(stones,opponent));
+            lastMoveCaptures=count-countStones(stones,opponent);
+        }
+    }
+    private int countStones(Stone[][] board,Stone color){
+        int count=0;
+        for(Stone[] row:board)for(Stone stone:row)if(stone==color)count++;
+        return count;
+    }
     private Stone[][] positionAfter(int count){Stone[][] b=newBoard();for(SetupStone stone:initialSetup)if(inside(stone.x(),stone.y()))b[stone.y()][stone.x()]=stone.stone();for(int i=0;i<count;i++){Move m=moves.get(i);if(m.x()<0||m.y()<0)continue;if(!applyMove(b,m))throw new IllegalStateException("recorded move is illegal: "+m);}return b;}
 
     private boolean applyMove(Stone[][] board,Move move){int x=move.x(),y=move.y();if(!inside(x,y)||board[y][x]!=Stone.EMPTY)return false;board[y][x]=move.stone();Stone opponent=move.stone().opposite();boolean[][] checked=new boolean[height][width];for(int[]d:directions){int nx=x+d[0],ny=y+d[1];if(!inside(nx,ny)||checked[ny][nx]||board[ny][nx]!=opponent)continue;Group group=groupAt(board,nx,ny);for(Point p:group.stones())checked[p.y()][p.x()]=true;if(group.liberties()==0)for(Point p:group.stones())board[p.y()][p.x()]=Stone.EMPTY;}if(groupAt(board,x,y).liberties()==0){board[y][x]=Stone.EMPTY;return false;}return true;}
