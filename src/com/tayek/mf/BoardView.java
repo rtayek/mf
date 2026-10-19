@@ -22,7 +22,8 @@ public final class BoardView extends Canvas {
     public void setLabels(List<BoardLabel> value){labels=value==null?List.of():List.copyOf(value);draw();}
     public void setMarks(List<BoardMark> value){marks=value==null?List.of():List.copyOf(value);draw();}
     public void setOnMoveRequested(BiConsumer<Integer,Integer> callback){moveRequested=callback==null?(x,y)->{}:callback;}
-    public void playAcceptedMove(boolean atari){sounds.play(GameSounds.Sound.stone);if(atari)sounds.play(GameSounds.Sound.atari);}
+    public void playAcceptedMove(boolean atari){playAcceptedMove(atari,0);}
+    public void playAcceptedMove(boolean atari,int captures){sounds.play(GameSounds.Sound.stone);if(captures>0)sounds.play(GameSounds.Sound.capture);else if(atari)sounds.play(GameSounds.Sound.atari);}
     public void setOnPositionChanged(Runnable r){positionChanged=r==null?()->{}:r;} public void setOnVariationSelected(IntConsumer c){variationSelected=c==null?i->{}:c;} public void refresh(){hoverX=hoverY=-1;setCursor(Cursor.DEFAULT);draw();positionChanged.run();}
     @Override public boolean isResizable(){return true;} @Override public double minWidth(double h){return 0;} @Override public double minHeight(double w){return 0;} @Override public double prefWidth(double h){return 760;} @Override public double prefHeight(double w){return 760;} @Override public double maxWidth(double h){return Double.MAX_VALUE;} @Override public double maxHeight(double w){return Double.MAX_VALUE;} @Override public void resize(double w,double h){setWidth(w);setHeight(h);}
     private void clearHover(){if(hoverX>=0){hoverX=hoverY=-1;draw();}}
