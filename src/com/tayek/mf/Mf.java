@@ -156,7 +156,8 @@ public class Mf extends Application {
         }
     }
     private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=controller.current();String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation,this::playMove);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);updateTreeVisibility();reloadPath();}
-    private void reloadPath(){if(runtime==null)return;currentNode=controller.current();runtime.showPath(controller.path());updateDocumentPane();updateStatus();updateEditMenu();updateTitle();refreshTree();}
+    private BoardPosition goPosition(){return controller.game()!=null && controller.game().type().equals(GameType.GO) ? controller.position() : null;}
+    private void reloadPath(){if(runtime==null)return;currentNode=controller.current();runtime.showPath(controller.path(),goPosition());updateDocumentPane();updateStatus();updateEditMenu();updateTitle();refreshTree();}
     private void newBoardWindow(){
         if(activeGame==null)return;
         Stage window=new Stage();
@@ -169,7 +170,7 @@ public class Mf extends Application {
         GameController.Observer observer=(c,change)->{
             Runnable refresh=()->{
                 if(c.game()!=activeGame){window.close();return;}
-                second.showPath(c.path());
+                second.showPath(c.path(),goPosition());
             };
             if(javafx.application.Platform.isFxApplicationThread())refresh.run();
             else javafx.application.Platform.runLater(refresh);
@@ -178,7 +179,7 @@ public class Mf extends Application {
         window.setOnHidden(e->controller.removeObserver(observer));
         window.setTitle("mf - board view");
         window.setScene(new Scene(new BorderPane(second.view()),600,650));
-        second.showPath(controller.path());
+        second.showPath(controller.path(),goPosition());
         window.show();
     }
     private void updateTreeVisibility() {
