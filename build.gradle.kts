@@ -53,3 +53,8 @@ tasks.register<JavaExec>("sgfCorpus") {
         args(sgfDir.get())
     }
 }
+
+// Keep source files under src/ and package the existing WAV assets as /audio/*.
+tasks.named<Copy>("processResources") {
+    from("src/audio") { into("audio") }
+}
