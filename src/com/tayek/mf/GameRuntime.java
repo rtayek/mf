@@ -16,7 +16,7 @@ interface GameRuntime {
     void showPath(List<GameNode> path);
     default void setShowSingleContinuation(boolean show) { }
     default boolean tryPlay(int x, int y) { return false; }
-    default void playAcceptedMove(boolean atari) { }
+    default void playAcceptedMove(boolean atari, int captures) { }
     int moveNumber();
     Stone sideToMove();
 
@@ -160,11 +160,11 @@ interface GameRuntime {
             return result.reverse().toString();
         }
 
-        @Override public void playAcceptedMove(boolean atari) { view.playAcceptedMove(atari); }
+        @Override public void playAcceptedMove(boolean atari, int captures) { view.playAcceptedMove(atari,captures); }
 
         @Override public boolean tryPlay(int x, int y) {
             if (!position.play(x, y)) return false;
-            view.playAcceptedMove(position.lastMoveCreatedAtari());
+            view.playAcceptedMove(position.lastMoveCreatedAtari(),position.lastMoveCaptures());
             return true;
         }
 
