@@ -21,7 +21,7 @@ public final class GameSounds {
     }
 
     private void load(Sound sound, String filename) {
-        var resource = GameSounds.class.getResource("/audio/" + filename);
+        var resource = GameSounds.class.getResource(filename);
         if (resource != null) clips.put(sound, new AudioClip(resource.toExternalForm()));
     }
 
