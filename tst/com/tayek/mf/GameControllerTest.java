@@ -8,6 +8,34 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 
 class GameControllerTest {
+    @Test void newGoGameStartsEmptyAndCanBeSaved() throws Exception {
+        for (int size : new int[] {9, 13, 19}) {
+            GameController controller = new GameController();
+            controller.newGoGame(size);
+            assertEquals(GameType.GO, controller.game().type());
+            assertEquals(size, controller.position().width());
+            assertEquals(size, controller.position().height());
+            assertEquals(0, controller.position().moveNumber());
+            assertEquals(Stone.BLACK, controller.position().sideToMove());
+            assertNull(controller.file());
+            assertFalse(controller.modified());
+            assertTrue(controller.move(0, 0));
+            assertEquals(Stone.BLACK, controller.position().stoneAt(0, 0));
+            var path = Files.createTempFile("mf-new-game-", ".sgf");
+            try {
+                controller.save(path);
+                GameController loaded = new GameController();
+                loaded.open(path);
+                assertEquals(size, loaded.game().boardSize());
+                assertTrue(loaded.right());
+                assertEquals(Stone.BLACK, loaded.position().stoneAt(0, 0));
+            } finally {
+                Files.deleteIfExists(path);
+            }
+        }
+        assertThrows(IllegalArgumentException.class, () -> new GameController().newGoGame(10));
+    }
+
     @Test void variationsObserversAndRoundTrip() throws Exception {
         GameController controller = new GameController();
         var events = new ArrayList<GameController.Change>();
