@@ -32,6 +32,18 @@ public final class GameController {
     public boolean canUndo() { return history.canUndo(); }
     public boolean canRedo() { return history.canRedo(); }
 
+    /** Start a new, unsaved Go game with an empty board. */
+    public void newGoGame(int size) {
+        if (size != 9 && size != 13 && size != 19)
+            throw new IllegalArgumentException("Go board size must be 9, 13, or 19");
+        GameNode root = new GameNode(null, null, List.of(
+                new SgfProperty("GM", List.of("1")),
+                new SgfProperty("FF", List.of("4")),
+                new SgfProperty("SZ", List.of(Integer.toString(size)))));
+        open(new GameCollection(List.of(new Game(GameType.GO, size,
+                "Black", "White", "Untitled", new GameTree(root)))));
+    }
+
     public void open(Path path) throws IOException {
         GameCollection parsed = SgfReader.read(path);
         open(parsed);
