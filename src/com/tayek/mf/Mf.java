@@ -24,6 +24,7 @@ public class Mf extends Application {
     private TreeView<GameNode> gameTreeView;
     private CheckMenuItem showGameTree;
     private boolean syncingTree;
+    private boolean analysisWindow;
     @Override public void start(Stage stage){controller.addObserver((c,change)->{
         if(change==GameController.Change.OPENED)showGame(c.game());
         else {
@@ -122,7 +123,7 @@ public class Mf extends Application {
     private void updateTitle() {
         if(mainStage==null)return;
         String name=sourceFile!=null?sourceFile.getName():"SGF Viewer";
-        mainStage.setTitle("mf - "+name+(controller.modified()?" *":""));
+        mainStage.setTitle("mf - "+(analysisWindow?"Analysis Copy - ":"")+name+(controller.modified()?" *":""));
     }
     private void save(Stage stage) {
         if(activeCollection==null)return;
@@ -184,12 +185,13 @@ public class Mf extends Application {
             GameController.Snapshot snapshot = controller.snapshot();
             Mf analysis = new Mf();
             analysis.start(new Stage());
+            analysis.analysisWindow = true;
             analysis.controller.openSnapshot(snapshot);
             analysis.activeCollection = analysis.controller.collection();
             analysis.sourceFile = null;
             analysis.saveItem.setDisable(false);
             analysis.saveAs.setDisable(false);
-            analysis.mainStage.setTitle("mf - Analysis Copy");
+            analysis.updateTitle();
         } catch (RuntimeException ex) {
             Alert error = new Alert(Alert.AlertType.ERROR,
                     "Could not create analysis copy:\\n" + ex.getMessage(), ButtonType.OK);
