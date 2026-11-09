@@ -41,6 +41,7 @@ class GameControllerTest {
         original.open(SgfReader.read("(;GM[1]SZ[9]C[root];B[aa];W[bb](;B[cc])(;B[dd]C[branch]))"));
         assertTrue(original.right());
         assertTrue(original.right());
+        assertTrue(original.right());
         assertTrue(original.down());
         assertEquals(3, original.current().move().x());
         assertTrue(original.move(4, 4)); // unsaved edit included in the snapshot
