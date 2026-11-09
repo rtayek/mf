@@ -58,6 +58,38 @@ public final class GameController {
         history.clear();
         publish(Change.OPENED);
     }
+    /** An SGF snapshot plus a variation path; no mutable nodes cross controllers. */
+    public record Snapshot(String sgf, List<Integer> selectedPath) {
+        public Snapshot {
+            Objects.requireNonNull(sgf);
+            selectedPath = List.copyOf(selectedPath);
+        }
+    }
+
+    public Snapshot snapshot() {
+        requireGame();
+        List<GameNode> nodes = path();
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 1; i < nodes.size(); i++)
+            indices.add(nodes.get(i - 1).children().indexOf(nodes.get(i)));
+        return new Snapshot(SgfWriter.write(new GameCollection(List.of(game))), indices);
+    }
+
+    public void openSnapshot(Snapshot snapshot) {
+        Objects.requireNonNull(snapshot);
+        GameCollection parsed = SgfReader.read(snapshot.sgf());
+        if (parsed.games().size() != 1)
+            throw new IllegalArgumentException("analysis snapshot must contain one game");
+        GameNode selected = parsed.games().get(0).tree().root();
+        for (int index : snapshot.selectedPath()) {
+            if (index < 0 || index >= selected.children().size())
+                throw new IllegalArgumentException("invalid analysis variation path");
+            selected = selected.children().get(index);
+        }
+        open(parsed);
+        select(selected);
+    }
+
     public void save(Path path) throws IOException {
         requireGame();
         SgfSave.saveAs(collection, path);
