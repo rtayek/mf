@@ -36,6 +36,31 @@ class GameControllerTest {
         assertThrows(IllegalArgumentException.class, () -> new GameController().newGoGame(10));
     }
 
+    @Test void analysisSnapshotIsIndependentAndPreservesSelection() {
+        GameController original = new GameController();
+        original.open(SgfReader.read("(;GM[1]SZ[9]C[root];B[aa];W[bb](;B[cc])(;B[dd]C[branch]))"));
+        assertTrue(original.right());
+        assertTrue(original.right());
+        assertTrue(original.down());
+        assertEquals(3, original.current().move().x());
+        assertTrue(original.move(4, 4)); // unsaved edit included in the snapshot
+        GameController.Snapshot snapshot = original.snapshot();
+        GameController analysis = new GameController();
+        analysis.openSnapshot(snapshot);
+        assertEquals(original.path().size(), analysis.path().size());
+        assertEquals(4, analysis.current().move().x());
+        assertNotSame(original.game().tree().root(), analysis.game().tree().root());
+        assertNull(analysis.file());
+        assertFalse(analysis.modified());
+        assertTrue(analysis.move(5, 5));
+        assertEquals(4, original.current().move().x());
+        assertEquals(0, original.current().children().size());
+        assertEquals(5, analysis.current().move().x());
+        assertEquals("branch", analysis.current().parent().property("C").get(0));
+        assertThrows(IllegalArgumentException.class,
+                () -> analysis.openSnapshot(new GameController.Snapshot(snapshot.sgf(), java.util.List.of(99))));
+    }
+
     @Test void variationsObserversAndRoundTrip() throws Exception {
         GameController controller = new GameController();
         var events = new ArrayList<GameController.Change>();
