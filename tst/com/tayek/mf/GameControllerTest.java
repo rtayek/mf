@@ -57,7 +57,7 @@ class GameControllerTest {
         assertEquals(4, original.current().move().x());
         assertEquals(0, original.current().children().size());
         assertEquals(5, analysis.current().move().x());
-        assertEquals("branch", analysis.current().parent().property("C").get(0));
+        assertEquals("branch",analysis.current().parent().parent().property("C").get(0));
         assertThrows(IllegalArgumentException.class,
                 () -> analysis.openSnapshot(new GameController.Snapshot(snapshot.sgf(), java.util.List.of(99))));
     }

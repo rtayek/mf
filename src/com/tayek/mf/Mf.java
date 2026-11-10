@@ -192,6 +192,7 @@ public class Mf extends Application {
             analysis.saveItem.setDisable(false);
             analysis.saveAs.setDisable(false);
             analysis.updateTitle();
+            KataGoPanel.open(analysis.controller, analysis.mainStage);
         } catch (RuntimeException ex) {
             Alert error = new Alert(Alert.AlertType.ERROR,
                     "Could not create analysis copy:\\n" + ex.getMessage(), ButtonType.OK);
