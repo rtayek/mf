@@ -48,12 +48,12 @@ public final class KataGoAdapter implements AutoCloseable {
         reader.start();
     }
 
-    /** Analyze a copied board state. This intentionally does not invent a move history. */
-    public CompletableFuture<KataGoAnalysis> analyze(BoardPosition board, double komi, int maxVisits) {
-        Objects.requireNonNull(board);
+    /** Analyze the selected SGF path, preserving its actual move history. */
+    public CompletableFuture<KataGoAnalysis> analyze(GameController controller, double komi, int maxVisits) {
+        Objects.requireNonNull(controller);
         if (maxVisits < 1) throw new IllegalArgumentException("maxVisits must be positive");
         String id = UUID.randomUUID().toString();
-        String query = query(id, board, komi, maxVisits);
+        String query = KataGoPosition.query(id, controller, komi, maxVisits);
         CompletableFuture<KataGoAnalysis> future = new CompletableFuture<>();
         synchronized (input) {
             if (!process.isAlive()) {
@@ -65,30 +65,6 @@ public final class KataGoAdapter implements AutoCloseable {
             catch (IOException ex) { pending.remove(id); future.completeExceptionally(ex); }
         }
         return future;
-    }
-
-    static String query(String id, BoardPosition board, double komi, int maxVisits) {
-        StringBuilder json = new StringBuilder("{\"id\":\"").append(id).append("\",\"initialStones\":[");
-        boolean first = true;
-        for (int y = 0; y < board.height(); y++) for (int x = 0; x < board.width(); x++) {
-            Stone stone = board.stoneAt(x, y);
-            if (stone == Stone.EMPTY) continue;
-            if (!first) json.append(',');
-            first = false;
-            json.append("[\"").append(stone == Stone.BLACK ? 'B' : 'W').append("\",\"")
-                    .append(coordinate(x, y, board.height())).append("\"]");
-        }
-        String player = board.sideToMove() == Stone.WHITE ? "W" : "B";
-        return json.append("],\"moves\":[],\"initialPlayer\":\"").append(player)
-                .append("\",\"rules\":\"chinese\",\"komi\":").append(komi)
-                .append(",\"boardXSize\":").append(board.width())
-                .append(",\"boardYSize\":").append(board.height())
-                .append(",\"maxVisits\":").append(maxVisits).append('}').toString();
-    }
-
-    private static String coordinate(int x, int y, int height) {
-        int column = x >= 8 ? x + 1 : x;
-        return "" + (char) ('A' + column) + (height - y);
     }
 
     private void readResponses() {

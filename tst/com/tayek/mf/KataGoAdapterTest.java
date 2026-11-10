@@ -4,15 +4,43 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 class KataGoAdapterTest {
-    @Test void serializesCurrentBoardWithoutInventingHistory() {
+    @Test void serializesRecordedMovesRatherThanFinalStones() {
         GameController controller = new GameController();
         controller.newGoGame(19);
         assertTrue(controller.move(3, 3));
-        String request = KataGoAdapter.query("a", controller.position(), 7.5, 100);
-        assertTrue(request.contains("\"initialStones\":[[\"B\",\"D16\"]]"));
-        assertTrue(request.contains("\"initialPlayer\":\"W\""));
-        assertTrue(request.contains("\"moves\":[]"));
-        assertEquals("a", ((java.util.Map<?, ?>) KataGoJson.parse(request)).get("id"));
+        assertTrue(controller.move(15, 15));
+        assertTrue(controller.pass());
+        String request = KataGoPosition.query("a", controller, 7.5, 100);
+        var data = (java.util.Map<?, ?>) KataGoJson.parse(request);
+        assertEquals("a", data.get("id"));
+        assertEquals(java.util.List.of(), data.get("initialStones"));
+        assertEquals(java.util.List.of(
+                java.util.List.of("B", "D16"),
+                java.util.List.of("W", "Q4"),
+                java.util.List.of("B", "pass")), data.get("moves"));
+        assertEquals("B", data.get("initialPlayer"));
+        assertEquals(java.util.List.of(3.0), data.get("analyzeTurns"));
+    }
+
+    @Test void followsSelectedVariationAndSetup() {
+        GameController controller = new GameController();
+        controller.open(SgfReader.read("(;GM[1]SZ[9]AB[cc]AW[gg]PL[W];W[dd](;B[ee])(;B[ff]))"));
+        assertTrue(controller.right());
+        assertTrue(controller.right());
+        assertTrue(controller.down());
+        var data = (java.util.Map<?, ?>) KataGoJson.parse(KataGoPosition.query("b", controller, 7.5, 30));
+        assertEquals(java.util.List.of(java.util.List.of("B", "C7"), java.util.List.of("W", "G3")), data.get("initialStones"));
+        assertEquals(java.util.List.of(java.util.List.of("W", "D6"), java.util.List.of("B", "F4")), data.get("moves"));
+        assertEquals("W", data.get("initialPlayer"));
+        assertEquals(java.util.List.of(2.0), data.get("analyzeTurns"));
+    }
+
+    @Test void refusesMidgameSetupInsteadOfLosingKoHistory() {
+        GameController controller = new GameController();
+        controller.open(SgfReader.read("(;GM[1]SZ[9];B[dd];W[ee]AB[aa])"));
+        assertTrue(controller.right());
+        assertTrue(controller.right());
+        assertThrows(IllegalArgumentException.class, () -> KataGoPosition.query("c", controller, 7.5, 30));
     }
 
     @Test void parsesRepresentativeRecordedResponse() {

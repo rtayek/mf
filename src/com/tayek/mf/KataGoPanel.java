@@ -37,11 +37,10 @@ final class KataGoPanel {
             }
             try {
                 if (panel.adapter == null) panel.adapter = panel.startEngine();
-                BoardPosition position = controller.position();
                 long generation = ++panel.generation;
                 status.setText("Analyzing selected position...");
                 result.clear();
-                panel.adapter.analyze(position, 7.5, 100).whenComplete((analysis, error) -> Platform.runLater(() -> {
+                panel.adapter.analyze(controller, 7.5, 100).whenComplete((analysis, error) -> Platform.runLater(() -> {
                     if (generation != panel.generation) return;
                     if (error != null) {
                         status.setText("Analysis failed");
