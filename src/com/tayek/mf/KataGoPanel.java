@@ -22,11 +22,13 @@ final class KataGoPanel {
         window.setTitle("MF - KataGo Analysis");
         Button start = new Button("Start / Analyze Position");
         Button stop = new Button("Stop");
+        Button close = new Button("Close");
+        close.setOnAction(e -> window.close());
         Label status = new Label("Select a Go position, then start analysis");
         TextArea result = new TextArea();
         result.setEditable(false);
         result.setStyle("-fx-font-family: monospace; -fx-font-size: 16px;");
-        VBox layout = new VBox(12, new HBox(12, start, stop), status, result);
+        VBox layout = new VBox(12, new HBox(12, start, stop, close), status, result);
         layout.setPadding(new Insets(12));
         VBox.setVgrow(result, Priority.ALWAYS);
         window.setScene(new Scene(layout, 630, 440));
