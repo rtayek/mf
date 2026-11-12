@@ -20,10 +20,11 @@ final class KataGoPanel {
         Stage window = new Stage();
         window.initOwner(owner);
         window.setTitle("MF - KataGo Analysis");
-        Button start = new Button("Start / Analyze Position");
+        Button start = new Button("Start Auto Analysis");
         Button stop = new Button("Stop");
         Button close = new Button("Close");
         close.setOnAction(e -> window.close());
+        stop.setDisable(true);
         Label status = new Label("Select a Go position, then start analysis");
         TextArea result = new TextArea();
         result.setEditable(false);
@@ -32,39 +33,46 @@ final class KataGoPanel {
         layout.setPadding(new Insets(12));
         VBox.setVgrow(result, Priority.ALWAYS);
         window.setScene(new Scene(layout, 630, 440));
+        panel.latest = new LatestAnalysis<>(Platform::runLater, (analysis, error) -> {
+            if (!panel.running) return;
+            if (error != null) {
+                status.setText("Analysis failed");
+                result.setText(error.getCause() == null ? error.toString() : error.getCause().toString());
+            } else {
+                status.setText("Analysis complete: " + analysis.visits() + " visits. Navigate to refresh.");
+                result.setText(panel.describe(analysis));
+            }
+        });
         start.setOnAction(e -> {
             if (controller.game() == null || !controller.game().type().equals(GameType.GO)) {
                 status.setText("Go games only");
                 return;
             }
             try {
-                if (panel.adapter == null) panel.adapter = panel.startEngine();
-                long generation = ++panel.generation;
-                status.setText("Analyzing selected position...");
-                result.clear();
-                panel.adapter.analyze(controller, 7.5, 100).whenComplete((analysis, error) -> Platform.runLater(() -> {
-                    if (generation != panel.generation) return;
-                    if (error != null) {
-                        status.setText("Analysis failed");
-                        result.setText(error.getCause() == null ? error.toString() : error.getCause().toString());
-                    } else {
-                        status.setText("Analysis complete: " + analysis.visits() + " visits");
-                        result.setText(panel.describe(analysis));
-                    }
-                }));
+                panel.adapter = panel.startEngine();
+                panel.running = true;
+                start.setDisable(true);
+                stop.setDisable(false);
+                panel.refresh(controller, status, result);
             } catch (Exception ex) {
+                panel.stop();
                 status.setText("KataGo could not start");
                 result.setText(ex.toString());
             }
         });
         stop.setOnAction(e -> {
             panel.stop();
+            start.setDisable(false);
+            stop.setDisable(true);
             status.setText("Stopped");
         });
         GameController.Observer observer = (c, change) -> {
-            panel.generation++;
-            status.setText("Position changed. Select Start to analyze.");
-            result.clear();
+            if (change == GameController.Change.SAVED) return;
+            if (panel.running) panel.refresh(c, status, result);
+            else {
+                status.setText("Position changed. Select Start Auto Analysis.");
+                result.clear();
+            }
         };
         controller.addObserver(observer);
         window.setOnHidden(e -> {
@@ -98,11 +106,19 @@ final class KataGoPanel {
         return out.toString();
     }
 
+    private void refresh(GameController controller, Label status, TextArea result) {
+        status.setText("Analyzing selected position...");
+        result.clear();
+        latest.submit(() -> adapter.analyze(controller, 7.5, 500));
+    }
+
     private void stop() {
-        generation++;
+        running = false;
+        latest.cancel();
         if (adapter != null) { adapter.close(); adapter = null; }
     }
 
     private KataGoAdapter adapter;
-    private long generation;
+    private LatestAnalysis<KataGoAnalysis> latest;
+    private boolean running;
 }
