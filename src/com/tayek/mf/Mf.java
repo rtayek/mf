@@ -172,7 +172,16 @@ public class Mf extends Application {
             error.showAndWait();
         }
     }
-    private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=controller.current();String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation,this::playMove);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(status);updateTreeVisibility();reloadPath();}
+    private void showGame(Game game){activeGame=game;rootNode=game.tree().root();currentNode=controller.current();String players=game.blackPlayer()+" - "+game.whitePlayer();gameLabel=(game.name().isBlank()?players:game.name()+"    "+players);runtime=GameRuntime.forGame(game,this::updateStatus,this::selectVariation,this::playMove);runtime.setShowSingleContinuation(showSingleContinuation.isSelected());content.setLeft(documentPane);content.setCenter(runtime.view());content.setBottom(navigationBar());updateTreeVisibility();reloadPath();}
+    private VBox navigationBar() {
+        Button home = new Button("Home");
+        Button end = new Button("End");
+        home.setOnAction(e -> controller.home());
+        end.setOnAction(e -> controller.end());
+        javafx.scene.layout.HBox buttons = new javafx.scene.layout.HBox(12, home, end);
+        buttons.setAlignment(Pos.CENTER);
+        return new VBox(4, status, buttons);
+    }
     private BoardPosition goPosition(){return controller.game()!=null && controller.game().type().equals(GameType.GO) ? controller.position() : null;}
     private void reloadPath(){if(runtime==null)return;currentNode=controller.current();runtime.showPath(controller.path(),goPosition());updateDocumentPane();updateStatus();updateEditMenu();updateTitle();refreshTree();}
     /** Each game window owns a separate controller; board windows share their owner's controller. */
