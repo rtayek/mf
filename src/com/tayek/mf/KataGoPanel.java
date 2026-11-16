@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -34,22 +35,46 @@ final class KataGoPanel {
         TextArea result = new TextArea();
         result.setEditable(false);
         result.setStyle("-fx-font-family: monospace; -fx-font-size: 16px;");
+        ListView<String> candidates = new ListView<>();
+        candidates.setStyle("-fx-font-family: monospace; -fx-font-size: 16px;");
+        candidates.setOnMouseClicked(e -> {
+            if (e.getClickCount() != 2 || panel.positionSnapshot == null) return;
+            int index = candidates.getSelectionModel().getSelectedIndex();
+            if (index < 0 || index >= panel.currentCandidates.size()) return;
+            try {
+                KataGoVariationPreview.open(panel.positionSnapshot, panel.currentCandidates.get(index), window);
+            } catch (RuntimeException ex) {
+                status.setText("Could not preview variation: " + ex.getMessage());
+            }
+        });
+        panel.candidatesList = candidates;
+        result.setPrefRowCount(3);
         VBox layout = new VBox(12, new HBox(12, start, stop, close), showHeatmap,
-                new Label("Green = higher search rank; larger circles = more visits"), status, result);
+                new Label("Green = higher search rank; larger circles = more visits"), status,
+                new Label("Double-click a candidate to preview its variation"), candidates, result);
         layout.setPadding(new Insets(12));
-        VBox.setVgrow(result, Priority.ALWAYS);
+        VBox.setVgrow(candidates, Priority.ALWAYS);
         window.setScene(new Scene(layout, 630, 440));
         panel.latest = new LatestAnalysis<>(Platform::runLater, (analysis, error) -> {
             if (!panel.running) return;
             if (error != null) {
                 panel.clearHeatmap();
+                panel.clearPreview();
                 status.setText("Analysis failed");
                 result.setText(error.getCause() == null ? error.toString() : error.getCause().toString());
             } else {
                 panel.lastMoves = KataGoHeatmap.candidates(analysis, board.position().width(), board.position().height());
                 board.setHeatmap(showHeatmap.isSelected() ? panel.lastMoves : java.util.List.of());
                 status.setText("Analysis complete: " + analysis.visits() + " visits. Navigate to refresh.");
-                result.setText(panel.describe(analysis));
+                panel.positionSnapshot = controller.snapshot();
+                panel.currentCandidates = analysis.moves().subList(0, Math.min(10, analysis.moves().size()));
+                candidates.getItems().setAll(panel.currentCandidates.stream().map(move ->
+                        String.format(Locale.ROOT, "%-5s  Black %5.1f%%  Visits %4d  %s",
+                                move.move(), move.blackWinRate() * 100, move.visits(),
+                                String.join(" ", move.variation()))).toList());
+                result.setText(String.format(Locale.ROOT,
+                        "Black win rate: %.1f%%    Black score lead: %+.2f",
+                        analysis.blackWinRate() * 100, analysis.blackScoreLead()));
             }
         });
         start.setOnAction(e -> {
@@ -80,6 +105,7 @@ final class KataGoPanel {
             if (panel.running) panel.refresh(c, status, result);
             else {
                 panel.clearHeatmap();
+                panel.clearPreview();
                 status.setText("Position changed. Select Start Auto Analysis.");
                 result.clear();
             }
@@ -118,6 +144,7 @@ final class KataGoPanel {
 
     private void refresh(GameController controller, Label status, TextArea result) {
         clearHeatmap();
+        clearPreview();
         status.setText("Analyzing selected position...");
         result.clear();
         latest.submit(() -> adapter.analyze(controller, 7.5, 500));
@@ -128,9 +155,16 @@ final class KataGoPanel {
         board.setHeatmap(lastMoves);
     }
 
+    private void clearPreview() {
+        currentCandidates = java.util.List.of();
+        positionSnapshot = null;
+        if (candidatesList != null) candidatesList.getItems().clear();
+    }
+
     private void stop() {
         running = false;
         clearHeatmap();
+        clearPreview();
         latest.cancel();
         if (adapter != null) { adapter.close(); adapter = null; }
     }
@@ -139,5 +173,8 @@ final class KataGoPanel {
     private LatestAnalysis<KataGoAnalysis> latest;
     private BoardView board;
     private java.util.List<KataGoHeatmap.Spot> lastMoves = java.util.List.of();
+    private ListView<String> candidatesList;
+    private GameController.Snapshot positionSnapshot;
+    private java.util.List<KataGoAnalysis.Candidate> currentCandidates = java.util.List.of();
     private boolean running;
 }
