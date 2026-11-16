@@ -16,11 +16,13 @@ import javafx.scene.text.TextAlignment;
 public final class BoardView extends Canvas {
     private static final double horizontalSpacingMm=22.0,verticalSpacingMm=23.7,marginMm=24.0,stoneDiameterMm=23.0,hoverRadius=.38;
     private BoardPosition position; private List<BoardLabel> labels=List.of(); private List<BoardMark> marks=List.of();
+    private List<KataGoHeatmap.Spot> heatmap=List.of();
     private final GameSounds sounds = new GameSounds(); private FlatBoardTransform transform; private double scale; private int hoverX=-1,hoverY=-1; private Runnable positionChanged=()->{}; private IntConsumer variationSelected=i->{}; private BiConsumer<Integer,Integer> moveRequested=(x,y)->{};
     public BoardView(BoardPosition position){this.position=position;widthProperty().addListener((o,a,b)->draw());heightProperty().addListener((o,a,b)->draw());setOnMouseMoved(e->updateHover(e.getX(),e.getY()));setOnMouseExited(e->clearHover());setOnMouseClicked(e->playHover());}
     public void setPosition(BoardPosition p){position=p;refresh();} public BoardPosition position(){return position;}
     public void setLabels(List<BoardLabel> value){labels=value==null?List.of():List.copyOf(value);draw();}
     public void setMarks(List<BoardMark> value){marks=value==null?List.of():List.copyOf(value);draw();}
+    public void setHeatmap(List<KataGoHeatmap.Spot> value){heatmap=value==null?List.of():List.copyOf(value);draw();}
     public void setOnMoveRequested(BiConsumer<Integer,Integer> callback){moveRequested=callback==null?(x,y)->{}:callback;}
     public void playAcceptedMove(boolean atari){playAcceptedMove(atari,0);}
     public void playAcceptedMove(boolean atari,int captures){sounds.play(GameSounds.Sound.stone);if(captures>0)sounds.play(GameSounds.Sound.capture);else if(atari)sounds.play(GameSounds.Sound.atari);}
@@ -35,7 +37,24 @@ public final class BoardView extends Canvas {
     private boolean hasVariationChoices(){for(BoardLabel label:labels)if(label.isVariation())return true;return false;}
     private BoardLabel variationAt(int x,int y){for(BoardLabel label:labels)if(label.isVariation()&&label.x()==x&&label.y()==y)return label;return null;}
     private void updateHover(double sx,double sy){if(transform==null)return;Point2D b=transform.screenToBoard(sx,sy);int x=(int)Math.round(b.getX()),y=(int)Math.round(b.getY()),nx=-1,ny=-1;if(x>=0&&x<position.width()&&y>=0&&y<position.height()){double dx=b.getX()-x,dy=b.getY()-y;if(Math.sqrt(dx*dx+dy*dy)<=hoverRadius&&position.stoneAt(x,y)==Stone.EMPTY){nx=x;ny=y;}}if(nx!=hoverX||ny!=hoverY){hoverX=nx;hoverY=ny;setCursor(variationAt(nx,ny)!=null?Cursor.HAND:Cursor.DEFAULT);draw();}}
-    private void draw(){double width=getWidth(),height=getHeight();if(width<=0||height<=0)return;int columns=position.width(),rows=position.height();double pw=2*marginMm+(columns-1)*horizontalSpacingMm,ph=2*marginMm+(rows-1)*verticalSpacingMm;scale=Math.min(width/pw,height/ph);double bw=pw*scale,bh=ph*scale,left=(width-bw)/2,top=(height-bh)/2;transform=new FlatBoardTransform(left+marginMm*scale,top+marginMm*scale,scale);GraphicsContext g=getGraphicsContext2D();g.clearRect(0,0,width,height);g.setFill(Color.rgb(218,174,92));g.fillRect(left,top,bw,bh);g.setStroke(Color.rgb(45,36,22));g.setLineWidth(Math.max(1,scale));for(int x=0;x<columns;x++){Point2D a=transform.boardToScreen(x,0),b=transform.boardToScreen(x,rows-1);g.strokeLine(a.getX(),a.getY(),b.getX(),b.getY());}for(int y=0;y<rows;y++){Point2D a=transform.boardToScreen(0,y),b=transform.boardToScreen(columns-1,y);g.strokeLine(a.getX(),a.getY(),b.getX(),b.getY());}drawCoordinates(g);if(columns==19&&rows==19)drawHoshi(g);for(int y=0;y<rows;y++)for(int x=0;x<columns;x++)if(position.stoneAt(x,y)!=Stone.EMPTY)drawStone(g,x,y,position.stoneAt(x,y));drawLabels(g);drawMarks(g);drawLastMove(g);if(hoverX>=0&&variationAt(hoverX,hoverY)==null)drawHoverStone(g,hoverX,hoverY,position.sideToMove());}
+    private void draw(){double width=getWidth(),height=getHeight();if(width<=0||height<=0)return;int columns=position.width(),rows=position.height();double pw=2*marginMm+(columns-1)*horizontalSpacingMm,ph=2*marginMm+(rows-1)*verticalSpacingMm;scale=Math.min(width/pw,height/ph);double bw=pw*scale,bh=ph*scale,left=(width-bw)/2,top=(height-bh)/2;transform=new FlatBoardTransform(left+marginMm*scale,top+marginMm*scale,scale);GraphicsContext g=getGraphicsContext2D();g.clearRect(0,0,width,height);g.setFill(Color.rgb(218,174,92));g.fillRect(left,top,bw,bh);g.setStroke(Color.rgb(45,36,22));g.setLineWidth(Math.max(1,scale));for(int x=0;x<columns;x++){Point2D a=transform.boardToScreen(x,0),b=transform.boardToScreen(x,rows-1);g.strokeLine(a.getX(),a.getY(),b.getX(),b.getY());}for(int y=0;y<rows;y++){Point2D a=transform.boardToScreen(0,y),b=transform.boardToScreen(columns-1,y);g.strokeLine(a.getX(),a.getY(),b.getX(),b.getY());}drawCoordinates(g);if(columns==19&&rows==19)drawHoshi(g);for(int y=0;y<rows;y++)for(int x=0;x<columns;x++)if(position.stoneAt(x,y)!=Stone.EMPTY)drawStone(g,x,y,position.stoneAt(x,y));drawHeatmap(g);drawLabels(g);drawMarks(g);drawLastMove(g);if(hoverX>=0&&variationAt(hoverX,hoverY)==null)drawHoverStone(g,hoverX,hoverY,position.sideToMove());}
+    private void drawHeatmap(GraphicsContext g) {
+        if (heatmap.isEmpty()) return;
+        int maxVisits = heatmap.stream().mapToInt(KataGoHeatmap.Spot::visits).max().orElse(1);
+        for (KataGoHeatmap.Spot spot : heatmap) {
+            if (spot.x() >= position.width() || spot.y() >= position.height()
+                    || position.stoneAt(spot.x(), spot.y()) != Stone.EMPTY) continue;
+            Point2D p = transform.boardToScreen(spot.x(), spot.y());
+            double fraction = Math.sqrt((double) spot.visits() / maxVisits);
+            double radius = Math.min(10 * scale, (5 + 5 * fraction) * scale);
+            double hue = 120 * (1 - Math.min(9, spot.rank()) / 9.0);
+            g.setFill(Color.hsb(hue, 0.85, 0.85, 0.72));
+            g.fillOval(p.getX() - radius, p.getY() - radius, 2 * radius, 2 * radius);
+            g.setStroke(Color.rgb(45, 36, 22, 0.6));
+            g.setLineWidth(Math.max(1, scale * 0.6));
+            g.strokeOval(p.getX() - radius, p.getY() - radius, 2 * radius, 2 * radius);
+        }
+    }
     private void drawLabels(GraphicsContext g){g.setTextAlign(TextAlignment.CENTER);g.setTextBaseline(VPos.CENTER);g.setFont(Font.font("Serif",FontWeight.BOLD,Math.max(16,12*scale)));for(BoardLabel label:labels){if(label.text().isEmpty())continue;if(label.x()<0||label.x()>=position.width()||label.y()<0||label.y()>=position.height())continue;Point2D p=transform.boardToScreen(label.x(),label.y());Stone stone=position.stoneAt(label.x(),label.y());if(label.isVariation()){double d=Math.max(15,11*scale);g.setFill(Color.rgb(218,174,92));g.fillRect(p.getX()-d/2,p.getY()-d/2,d,d);}g.setFill(stone==Stone.BLACK?Color.WHITE:Color.rgb(45,36,22));g.fillText(label.text(),p.getX(),p.getY());if(label.isVariation()&&label.x()==hoverX&&label.y()==hoverY){g.setStroke(Color.rgb(0,95,200));g.setLineWidth(Math.max(3,2*scale));double radius=Math.max(12,8*scale);g.strokeOval(p.getX()-radius,p.getY()-radius,2*radius,2*radius);}}}
     public record BoardMark(int x,int y,Kind kind) {
         public enum Kind { TRIANGLE, SQUARE, CIRCLE, X }
